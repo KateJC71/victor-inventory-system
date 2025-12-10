@@ -1,0 +1,5 @@
+{
+  "name": "Victor Inventory Manager",
+  "description": "A streamlined inventory management system optimized for mobile and desktop, featuring SKU search, model grouping, category browsing, and bulk data updates.",
+  "requestFramePermissions": []
+}

@@ -1,0 +1,472 @@
+import React, { useState, useMemo } from 'react';
+import { Product, CategoryType, CATEGORIES, CATEGORY_HIERARCHY } from '../types';
+import { PackagePlus, FolderTree, Save, ChevronDown, ChevronRight, Edit2, Check, X, Lock, Plus, Trash2 } from 'lucide-react';
+
+// 管理畫面密碼
+const ADMIN_PASSWORD = 'Victor2025';
+
+interface ManageViewProps {
+  products: Product[];
+  onAddProduct: (product: Product) => void;
+  onUpdateSubCategory: (category: CategoryType, oldName: string, newName: string) => void;
+  onDeleteSubCategory: (category: CategoryType, subCategoryName: string) => void;
+}
+
+export const ManageView: React.FC<ManageViewProps> = ({ products, onAddProduct, onUpdateSubCategory, onDeleteSubCategory }) => {
+  const [activeSubTab, setActiveSubTab] = useState<'add' | 'structure'>('add');
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (password === ADMIN_PASSWORD) {
+      setIsAuthenticated(true);
+      setError('');
+    } else {
+      setError('パスワードが正しくありません');
+    }
+  };
+
+  // 密碼輸入畫面
+  if (!isAuthenticated) {
+    return (
+      <div className="p-4 max-w-md mx-auto min-h-[80vh] flex items-center justify-center">
+        <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-200 w-full">
+          <div className="text-center mb-6">
+            <div className="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Lock className="text-blue-600" size={32} />
+            </div>
+            <h2 className="text-xl font-bold text-gray-900">管理者認証</h2>
+            <p className="text-gray-500 text-sm mt-1">パスワードを入力してください</p>
+          </div>
+
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-center text-lg tracking-widest"
+                placeholder="••••••••"
+                autoFocus
+              />
+            </div>
+            {error && (
+              <p className="text-red-500 text-sm text-center">{error}</p>
+            )}
+            <button
+              type="submit"
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition-colors"
+            >
+              ログイン
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-4 max-w-3xl mx-auto min-h-[80vh]">
+      <div className="flex justify-center mb-6">
+        <div className="bg-gray-100 p-1 rounded-lg flex text-sm font-medium">
+          <button
+            onClick={() => setActiveSubTab('add')}
+            className={`px-6 py-2 rounded-md transition-all flex items-center gap-2 ${
+              activeSubTab === 'add' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            <PackagePlus size={16} />
+            商品登録
+          </button>
+          <button
+            onClick={() => setActiveSubTab('structure')}
+            className={`px-6 py-2 rounded-md transition-all flex items-center gap-2 ${
+              activeSubTab === 'structure' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            <FolderTree size={16} />
+            カテゴリ構造
+          </button>
+        </div>
+      </div>
+
+      {activeSubTab === 'add' ? (
+        <AddProductForm products={products} onAdd={onAddProduct} />
+      ) : (
+        <CategoryStructureEditor products={products} onUpdate={onUpdateSubCategory} onDelete={onDeleteSubCategory} />
+      )}
+    </div>
+  );
+};
+
+// --- Sub Component: Add Product Form ---
+
+const AddProductForm: React.FC<{ products: Product[], onAdd: (p: Product) => void }> = ({ products, onAdd }) => {
+  const [formData, setFormData] = useState<Partial<Product>>({
+    category: CategoryType.Racket,
+    subCategory: '',
+    stock: 0,
+    price: 0,
+  });
+
+  const existingSubCategories = useMemo(() => {
+    if (!formData.category) return [];
+    const subs = new Set<string>();
+    
+    // 1. Add from static hierarchy definition (from PDF)
+    const staticSubs = CATEGORY_HIERARCHY[formData.category as CategoryType] || [];
+    staticSubs.forEach(s => subs.add(s));
+
+    // 2. Add from existing products (in case there are custom ones not in the static list)
+    products
+      .filter(p => p.category === formData.category)
+      .forEach(p => {
+        if (p.subCategory) subs.add(p.subCategory);
+      });
+      
+    return Array.from(subs).sort();
+  }, [products, formData.category]);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.sku || !formData.name || !formData.modelName || !formData.category) {
+      alert('必須項目を入力してください');
+      return;
+    }
+
+    const newProduct: Product = {
+      sku: formData.sku,
+      name: formData.name,
+      modelName: formData.modelName,
+      category: formData.category as CategoryType,
+      subCategory: formData.subCategory || 'General',
+      color: formData.color || '-',
+      size: formData.size || '-',
+      price: Number(formData.price),
+      stock: Number(formData.stock),
+      imageUrl: formData.imageUrl || 'https://placehold.co/400x400?text=No+Image',
+    };
+
+    onAdd(newProduct);
+    alert('商品を登録しました');
+    // Reset critical fields but keep context
+    setFormData(prev => ({ ...prev, sku: '', name: '', color: '', size: '', stock: 0 }));
+  };
+
+  const handleChange = (field: keyof Product, value: any) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label className="block text-xs font-bold text-gray-500 mb-1">SKU (必須)</label>
+          <input
+            type="text"
+            value={formData.sku || ''}
+            onChange={e => handleChange('sku', e.target.value)}
+            className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none"
+            placeholder="A170JR-Example"
+            required
+          />
+        </div>
+        <div>
+           <label className="block text-xs font-bold text-gray-500 mb-1">Model Name (必須)</label>
+           <input
+            type="text"
+            value={formData.modelName || ''}
+            onChange={e => handleChange('modelName', e.target.value)}
+            className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none"
+            placeholder="A170JR"
+            required
+          />
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-xs font-bold text-gray-500 mb-1">商品名 (必須)</label>
+        <input
+          type="text"
+          value={formData.name || ''}
+          onChange={e => handleChange('name', e.target.value)}
+          className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none"
+          placeholder="Junior Racket Red"
+          required
+        />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label className="block text-xs font-bold text-gray-500 mb-1">大分類</label>
+          <select
+            value={formData.category}
+            onChange={e => handleChange('category', e.target.value)}
+            className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none bg-white"
+          >
+            {CATEGORIES.map(c => (
+              <option key={c} value={c}>{c}</option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="block text-xs font-bold text-gray-500 mb-1">小分類 (選択または入力)</label>
+          <div className="relative">
+             <input
+              type="text"
+              list="subcategories-list"
+              value={formData.subCategory || ''}
+              onChange={e => handleChange('subCategory', e.target.value)}
+              className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none"
+              placeholder="リストから選択..."
+            />
+            <datalist id="subcategories-list">
+              {existingSubCategories.map(sub => (
+                <option key={sub} value={sub} />
+              ))}
+            </datalist>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="block text-xs font-bold text-gray-500 mb-1">カラー</label>
+          <input
+            type="text"
+            value={formData.color || ''}
+            onChange={e => handleChange('color', e.target.value)}
+            className="w-full p-2 border border-gray-300 rounded outline-none"
+          />
+        </div>
+        <div>
+           <label className="block text-xs font-bold text-gray-500 mb-1">サイズ</label>
+           <input
+            type="text"
+            value={formData.size || ''}
+            onChange={e => handleChange('size', e.target.value)}
+            className="w-full p-2 border border-gray-300 rounded outline-none"
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="block text-xs font-bold text-gray-500 mb-1">価格 (税込)</label>
+          <input
+            type="number"
+            value={formData.price || 0}
+            onChange={e => handleChange('price', e.target.value)}
+            className="w-full p-2 border border-gray-300 rounded outline-none"
+          />
+        </div>
+        <div>
+           <label className="block text-xs font-bold text-gray-500 mb-1">在庫数</label>
+           <input
+            type="number"
+            value={formData.stock || 0}
+            onChange={e => handleChange('stock', e.target.value)}
+            className="w-full p-2 border border-gray-300 rounded outline-none"
+          />
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-xs font-bold text-gray-500 mb-1">画像URL (任意)</label>
+        <input
+          type="text"
+          value={formData.imageUrl || ''}
+          onChange={e => handleChange('imageUrl', e.target.value)}
+          className="w-full p-2 border border-gray-300 rounded outline-none text-sm text-gray-600"
+          placeholder="https://..."
+        />
+      </div>
+
+      <button
+        type="submit"
+        className="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2 transition-colors"
+      >
+        <Save size={18} />
+        商品を保存
+      </button>
+    </form>
+  );
+};
+
+// --- Sub Component: Category Structure Editor ---
+
+const CategoryStructureEditor: React.FC<{
+  products: Product[],
+  onUpdate: (c: CategoryType, o: string, n: string) => void,
+  onDelete: (c: CategoryType, subName: string) => void
+}> = ({ products, onUpdate, onDelete }) => {
+  const [openCategory, setOpenCategory] = useState<CategoryType | null>(null);
+  const [editingSub, setEditingSub] = useState<{ cat: CategoryType, oldName: string } | null>(null);
+  const [newName, setNewName] = useState('');
+  const [addingTo, setAddingTo] = useState<CategoryType | null>(null);
+  const [newSubName, setNewSubName] = useState('');
+
+  // Combine static hierarchy with used hierarchy
+  const structure = useMemo(() => {
+    const map: Partial<Record<CategoryType, Set<string>>> = {};
+    CATEGORIES.forEach(c => map[c] = new Set());
+    
+    // Add static hierarchy first
+    Object.entries(CATEGORY_HIERARCHY).forEach(([cat, subs]) => {
+      subs.forEach(s => map[cat as CategoryType]?.add(s));
+    });
+
+    // Add existing from products
+    products.forEach(p => {
+      if (p.subCategory && map[p.category]) {
+        map[p.category]?.add(p.subCategory);
+      }
+    });
+    return map;
+  }, [products]);
+
+  const handleEditClick = (cat: CategoryType, oldName: string) => {
+    setEditingSub({ cat, oldName });
+    setNewName(oldName);
+  };
+
+  const handleSave = () => {
+    if (editingSub && newName.trim()) {
+      onUpdate(editingSub.cat, editingSub.oldName, newName.trim());
+      setEditingSub(null);
+      setNewName('');
+    }
+  };
+
+  const handleAddSubCategory = (category: CategoryType) => {
+    if (newSubName.trim()) {
+      // 新增小分類：用一個空的更新來觸發（從空字串更新到新名稱）
+      onUpdate(category, '', newSubName.trim());
+      setAddingTo(null);
+      setNewSubName('');
+    }
+  };
+
+  const handleDelete = (category: CategoryType, subName: string) => {
+    const itemCount = products.filter(p => p.category === category && p.subCategory === subName).length;
+    if (itemCount > 0) {
+      if (!confirm(`この小分類には ${itemCount} 件の商品があります。削除すると商品の小分類が空になります。続行しますか？`)) {
+        return;
+      }
+    }
+    onDelete(category, subName);
+  };
+
+  return (
+    <div className="space-y-3">
+      <div className="bg-blue-50 p-4 rounded-lg border border-blue-100 text-sm text-blue-800 mb-4">
+        <p>ここで小分類の名前を変更すると、関連するすべての商品の小分類が一括で更新されます。</p>
+      </div>
+
+      {CATEGORIES.map(category => {
+        const categorySet = structure[category];
+        const subCats = categorySet ? Array.from(categorySet).sort() : [];
+        const isOpen = openCategory === category;
+
+        return (
+          <div key={category} className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+            <button
+              onClick={() => setOpenCategory(isOpen ? null : category)}
+              className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 transition-colors"
+            >
+              <div className="flex items-center gap-2">
+                <span className="font-bold text-gray-800">{category}</span>
+                <span className="text-xs bg-white border px-2 py-0.5 rounded-full text-gray-500">
+                  {subCats.length} 小分類
+                </span>
+              </div>
+              {isOpen ? <ChevronDown size={18} className="text-gray-400" /> : <ChevronRight size={18} className="text-gray-400" />}
+            </button>
+
+            {isOpen && (
+              <div className="p-2 space-y-1">
+                {subCats.length === 0 && !addingTo && (
+                   <p className="text-center py-4 text-gray-400 text-xs italic">小分類はまだありません</p>
+                )}
+                {subCats.map(sub => (
+                  <div key={sub} className="flex items-center justify-between p-3 bg-white border border-gray-100 rounded hover:border-blue-100 group">
+                    {editingSub?.cat === category && editingSub?.oldName === sub ? (
+                      <div className="flex items-center gap-2 w-full">
+                         <input
+                           type="text"
+                           value={newName}
+                           onChange={(e) => setNewName(e.target.value)}
+                           className="flex-1 p-1 border border-blue-300 rounded text-sm outline-none"
+                           autoFocus
+                         />
+                         <button onClick={handleSave} className="p-1 text-green-600 hover:bg-green-50 rounded"><Check size={16}/></button>
+                         <button onClick={() => setEditingSub(null)} className="p-1 text-red-500 hover:bg-red-50 rounded"><X size={16}/></button>
+                      </div>
+                    ) : (
+                      <>
+                        <span className="text-sm text-gray-700 ml-2">{sub}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-gray-400 mr-2">
+                            {products.filter(p => p.category === category && p.subCategory === sub).length} items
+                          </span>
+                          <button
+                            onClick={() => handleEditClick(category, sub)}
+                            className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                          >
+                            <Edit2 size={14} />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(category, sub)}
+                            className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                ))}
+
+                {/* 新增小分類 */}
+                {addingTo === category ? (
+                  <div className="flex items-center gap-2 p-3 bg-blue-50 border border-blue-200 rounded">
+                    <input
+                      type="text"
+                      value={newSubName}
+                      onChange={(e) => setNewSubName(e.target.value)}
+                      className="flex-1 p-1 border border-blue-300 rounded text-sm outline-none"
+                      placeholder="新しい小分類名..."
+                      autoFocus
+                    />
+                    <button
+                      onClick={() => handleAddSubCategory(category)}
+                      className="p-1 text-green-600 hover:bg-green-50 rounded"
+                    >
+                      <Check size={16}/>
+                    </button>
+                    <button
+                      onClick={() => { setAddingTo(null); setNewSubName(''); }}
+                      className="p-1 text-red-500 hover:bg-red-50 rounded"
+                    >
+                      <X size={16}/>
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setAddingTo(category)}
+                    className="w-full flex items-center justify-center gap-2 p-3 text-blue-600 hover:bg-blue-50 border border-dashed border-blue-300 rounded transition-colors text-sm"
+                  >
+                    <Plus size={16} />
+                    小分類を追加
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+};
