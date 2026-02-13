@@ -1,9 +1,15 @@
 
 import React, { useState, useRef } from 'react';
 import { Product, CategoryType } from '../types';
-import { FileDown, Upload, AlertTriangle, CheckCircle, Loader2, RefreshCw, Database } from 'lucide-react';
+import { FileDown, Upload, AlertTriangle, CheckCircle, Loader2, RefreshCw, Database, Send } from 'lucide-react';
 import { decodeFile, parseStockCSV, convertToInventoryUpdate, validateCSVFile } from '../services/csvParser';
 import { fetchProductsFromSheets } from '../services/dataService';
+import { writeUnregisteredProducts } from '../services/googleSheets';
+
+interface UnmatchedProduct {
+  sku: string;
+  productName: string;
+}
 
 interface UploadViewProps {
   onUpdateInventory: (newProducts: Product[]) => void;
@@ -16,6 +22,9 @@ export const UploadView: React.FC<UploadViewProps> = ({ onUpdateInventory, curre
   const [status, setStatus] = useState<'idle' | 'processing' | 'success' | 'error'>('idle');
   const [message, setMessage] = useState('');
   const [uploadDetails, setUploadDetails] = useState<{ matched: number; unmatched: number; total: number } | null>(null);
+  const [unmatchedProducts, setUnmatchedProducts] = useState<UnmatchedProduct[]>([]);
+  const [writeStatus, setWriteStatus] = useState<'idle' | 'writing' | 'done' | 'error'>('idle');
+  const [writeMessage, setWriteMessage] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -73,12 +82,17 @@ export const UploadView: React.FC<UploadViewProps> = ({ onUpdateInventory, curre
         return product;
       });
 
-      // 計算未匹配的 SKU
+      // 收集未匹配的 SKU 及商品名稱
+      const unmatchedList: UnmatchedProduct[] = [];
       inventoryUpdates.forEach(u => {
         if (!productMap.has(u.sku)) {
           unmatchedCount++;
+          unmatchedList.push({ sku: u.sku, productName: u.productName });
         }
       });
+      setUnmatchedProducts(unmatchedList);
+      setWriteStatus('idle');
+      setWriteMessage('');
 
       // 更新應用程式狀態
       onUpdateInventory(updatedProducts);
@@ -110,6 +124,20 @@ export const UploadView: React.FC<UploadViewProps> = ({ onUpdateInventory, curre
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       processFile(e.target.files[0]);
+    }
+  };
+
+  const handleWriteUnregistered = async () => {
+    if (unmatchedProducts.length === 0) return;
+    setWriteStatus('writing');
+    setWriteMessage('Product_Master に書き込み中...');
+    try {
+      const result = await writeUnregisteredProducts(unmatchedProducts);
+      setWriteStatus('done');
+      setWriteMessage(result.message);
+    } catch (err) {
+      setWriteStatus('error');
+      setWriteMessage(err instanceof Error ? err.message : '書き込みに失敗しました');
     }
   };
 
@@ -213,8 +241,53 @@ export const UploadView: React.FC<UploadViewProps> = ({ onUpdateInventory, curre
                 </div>
               )}
 
+              {/* 未登錄商品清單 */}
+              {unmatchedProducts.length > 0 && (
+                <div className="mt-4 w-full text-left border border-orange-200 rounded-lg overflow-hidden" onClick={e => e.stopPropagation()}>
+                  <div className="bg-orange-50 px-4 py-3 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <AlertTriangle size={16} className="text-orange-500" />
+                      <span className="text-sm font-medium text-orange-700">
+                        未登録SKU: {unmatchedProducts.length}件
+                      </span>
+                    </div>
+                    {writeStatus === 'done' ? (
+                      <span className="text-xs text-green-600 font-medium">書き込み完了</span>
+                    ) : (
+                      <button
+                        onClick={handleWriteUnregistered}
+                        disabled={writeStatus === 'writing'}
+                        className="flex items-center gap-1 px-3 py-1.5 bg-orange-500 text-white text-xs rounded-lg hover:bg-orange-600 disabled:opacity-50 transition-colors"
+                      >
+                        {writeStatus === 'writing' ? (
+                          <Loader2 size={12} className="animate-spin" />
+                        ) : (
+                          <Send size={12} />
+                        )}
+                        {writeStatus === 'writing' ? '書き込み中...' : 'Product_Masterに書き込む'}
+                      </button>
+                    )}
+                  </div>
+
+                  {writeMessage && (
+                    <div className={`px-4 py-2 text-xs ${writeStatus === 'error' ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-600'}`}>
+                      {writeMessage}
+                    </div>
+                  )}
+
+                  <div className="max-h-48 overflow-y-auto divide-y divide-orange-100">
+                    {unmatchedProducts.map((p, i) => (
+                      <div key={i} className="px-4 py-2 text-xs flex gap-3">
+                        <span className="text-gray-500 font-mono shrink-0">{p.sku}</span>
+                        <span className="text-gray-700 truncate">{p.productName}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <button
-                onClick={(e) => { e.stopPropagation(); setStatus('idle'); setUploadDetails(null); }}
+                onClick={(e) => { e.stopPropagation(); setStatus('idle'); setUploadDetails(null); setUnmatchedProducts([]); setWriteStatus('idle'); }}
                 className="mt-4 text-blue-600 underline text-sm"
               >
                 続けてアップロード
