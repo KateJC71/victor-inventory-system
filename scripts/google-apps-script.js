@@ -1,26 +1,184 @@
 /**
  * Google Apps Script - Victor Inventory System
  *
- * 用途：接收前端 POST 請求，將未登錄商品寫入 Product_Master
+ * === 既有功能 ===
+ * - processExcelUpload()：從 Google Drive 抓 Excel 寫入 Inventory_Raw
+ * - updateImageUrls()：自動比對圖片填入 Product_Master M 欄
+ *
+ * === 新增功能 ===
+ * - doPost()：接收前端 POST 請求，將未登錄商品寫入 Product_Master
+ * - doGet()：測試 API 是否正常
  *
  * === 部署步驟 ===
- * 1. 打開你的 Google Spreadsheet
- * 2. 點選 「擴充功能」 → 「Apps Script」
- * 3. 刪除預設的 Code.gs 內容，貼上這個檔案的全部程式碼
- * 4. 點擊 「部署」 → 「新增部署作業」
- * 5. 類型選擇 「網頁應用程式」
- * 6. 設定：
+ * 1. 打開你的 Google Spreadsheet → 「擴充功能」 → 「Apps Script」
+ * 2. 用這個檔案的內容「取代」原本的 Code.gs
+ * 3. 點擊 「部署」 → 「新增部署作業」
+ * 4. 類型選擇 「網頁應用程式」
+ * 5. 設定：
  *    - 執行身份：「我」(Me)
  *    - 存取權限：「所有人」(Anyone)
- * 7. 點擊 「部署」
- * 8. 複製產生的 URL（格式類似 https://script.google.com/macros/s/xxxxx/exec）
- * 9. 將此 URL 設定為環境變數 VITE_GOOGLE_APPS_SCRIPT_URL
- *    - 本地開發：加到 .env.local
+ * 6. 點擊 「部署」
+ * 7. 複製產生的 URL（格式類似 https://script.google.com/macros/s/xxxxx/exec）
+ * 8. 將此 URL 設定為環境變數 VITE_GOOGLE_APPS_SCRIPT_URL
  *    - Vercel：加到 Environment Variables
  */
 
+// ==========================================
+// 庫存系統設定區 (請勿更動 ID 以外的部分)
+// ==========================================
+// 1. Excel 上傳資料夾 ID
+const FOLDER_ID_UPLOADS = '1hpVWbkkn4l6FLhiPyDuUoFSstZofjNhN';
+// 2. 圖片資料夾 ID
+const FOLDER_ID_IMAGES = '1-GDNlTzdZSN71Yvwld9JCA74xy6yXU7G';
+// 3. Google Sheet 分頁名稱設定
+const SHEET_NAME_INVENTORY = 'Inventory_Raw';
+const SHEET_NAME_LOGS = 'Upload_Logs';
+const SHEET_NAME_MASTER = 'Product_Master';
+
+// ==========================================
+// 既有功能：處理 Excel 匯入
+// ==========================================
+function processExcelUpload() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const logSheet = ss.getSheetByName(SHEET_NAME_LOGS);
+
+  try {
+    const folder = DriveApp.getFolderById(FOLDER_ID_UPLOADS);
+    const files = folder.getFilesByType(MimeType.MICROSOFT_EXCEL);
+
+    let newestFile = null;
+    let newestDate = new Date(0);
+    while (files.hasNext()) {
+      let file = files.next();
+      if (file.getLastUpdated() > newestDate) {
+        newestDate = file.getLastUpdated();
+        newestFile = file;
+      }
+    }
+    if (!newestFile) {
+      console.log("找不到 Excel 檔案");
+      return;
+    }
+
+    console.log("開始處理檔案: " + newestFile.getName());
+
+    const blob = newestFile.getBlob();
+    const resource = {
+      title: "[TEMP] " + newestFile.getName(),
+      mimeType: MimeType.GOOGLE_SHEETS
+    };
+
+    const tempFile = Drive.Files.insert(resource, blob);
+    const tempSpreadsheet = SpreadsheetApp.openById(tempFile.id);
+    const tempSheet = tempSpreadsheet.getSheets()[0];
+    const data = tempSheet.getDataRange().getValues();
+    Drive.Files.remove(tempFile.id);
+
+    const targetData = [];
+    const timestamp = new Date();
+
+    for (let i = 1; i < data.length; i++) {
+      let row = data[i];
+      let sku = row[2];
+      if (!sku) continue;
+      let name = row[3];
+      let price = row[4];
+      let stock = row[5];
+      let warehouse = row[0];
+
+      targetData.push([
+        sku,
+        name,
+        stock,
+        price,
+        warehouse,
+        timestamp
+      ]);
+    }
+
+    const invSheet = ss.getSheetByName(SHEET_NAME_INVENTORY);
+    if (invSheet.getLastRow() > 1) {
+      invSheet.getRange(2, 1, invSheet.getLastRow() - 1, invSheet.getLastColumn()).clearContent();
+    }
+    if (targetData.length > 0) {
+      invSheet.getRange(2, 1, targetData.length, targetData[0].length).setValues(targetData);
+    }
+
+    console.log("庫存更新成功，共更新 " + targetData.length + " 筆");
+
+    logSheet.appendRow([
+      new Date().getTime().toString(),
+      new Date(),
+      Session.getActiveUser().getEmail(),
+      newestFile.getName(),
+      "Success",
+      targetData.length
+    ]);
+  } catch (e) {
+    console.error("發生錯誤: " + e.toString());
+    logSheet.appendRow([
+      new Date().getTime().toString(),
+      new Date(),
+      "System",
+      "Error",
+      "Fail: " + e.toString(),
+      0
+    ]);
+  }
+}
+
+// ==========================================
+// 既有功能：自動抓取圖片連結並填入 Product_Master
+// ==========================================
+function updateImageUrls() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const masterSheet = ss.getSheetByName('Product_Master');
+
+  const lastRow = masterSheet.getLastRow();
+  if (lastRow <= 1) return;
+
+  const range = masterSheet.getRange(2, 1, lastRow - 1, 13);
+  const values = range.getValues();
+
+  const folder = DriveApp.getFolderById(FOLDER_ID_IMAGES);
+  const files = folder.getFiles();
+  const imageMap = {};
+
+  while (files.hasNext()) {
+    let file = files.next();
+    let fileUrl = "https://drive.google.com/thumbnail?sz=w500&id=" + file.getId();
+    imageMap[file.getName()] = fileUrl;
+  }
+
+  let updateCount = 0;
+  for (let i = 0; i < values.length; i++) {
+    let sku = values[i][0];
+    let jpgName = sku + ".jpg";
+    let pngName = sku + ".png";
+
+    if (imageMap[jpgName]) {
+      values[i][12] = imageMap[jpgName];
+      updateCount++;
+    } else if (imageMap[pngName]) {
+      values[i][12] = imageMap[pngName];
+      updateCount++;
+    } else {
+      values[i][12] = "";
+    }
+  }
+
+  const urlColumn = values.map(row => [row[12]]);
+  masterSheet.getRange(2, 13, lastRow - 1, 1).setValues(urlColumn);
+
+  console.log("已更新圖片連結，共 " + updateCount + " 筆");
+}
+
+// ==========================================
+// 新增功能：Web App API（前端呼叫用）
+// ==========================================
+
 /**
- * 處理 POST 請求
+ * 處理 POST 請求 - 前端上傳未登錄商品時呼叫
  */
 function doPost(e) {
   try {
@@ -45,20 +203,20 @@ function handleAddUnregistered(products) {
     return createResponse({ success: false, message: '商品データがありません' });
   }
 
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Product_Master');
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAME_MASTER);
   if (!sheet) {
     return createResponse({ success: false, message: 'Product_Master シートが見つかりません' });
   }
 
   // 取得現有的 SKU 列表（A列），避免重複
   var lastRow = sheet.getLastRow();
-  var existingSkus = new Set();
+  var existingSkus = {};
 
   if (lastRow > 1) {
     var skuRange = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
     for (var i = 0; i < skuRange.length; i++) {
       if (skuRange[i][0]) {
-        existingSkus.add(String(skuRange[i][0]).trim());
+        existingSkus[String(skuRange[i][0]).trim()] = true;
       }
     }
   }
@@ -71,15 +229,14 @@ function handleAddUnregistered(products) {
     var productName = String(products[j].productName).trim();
 
     // 跳過已存在的 SKU
-    if (existingSkus.has(sku)) {
+    if (existingSkus[sku]) {
       skipped++;
       continue;
     }
 
     // 建立新行：A=SKU, B=空(category), C=商品名稱
-    var newRow = [sku, '', productName];
-    sheet.appendRow(newRow);
-    existingSkus.add(sku);
+    sheet.appendRow([sku, '', productName]);
+    existingSkus[sku] = true;
     added++;
   }
 
