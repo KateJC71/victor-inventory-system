@@ -3,6 +3,7 @@
 
 const API_KEY = import.meta.env.VITE_GOOGLE_API_KEY;
 const SPREADSHEET_ID = import.meta.env.VITE_GOOGLE_SPREADSHEET_ID;
+const APPS_SCRIPT_URL = import.meta.env.VITE_GOOGLE_APPS_SCRIPT_URL;
 const BASE_URL = 'https://sheets.googleapis.com/v4/spreadsheets';
 
 // 工作表名稱
@@ -106,29 +107,35 @@ export async function fetchInventoryRaw(): Promise<InventoryRawRow[]> {
 }
 
 /**
- * 更新 Inventory_Raw 工作表（批量更新）
- * 注意：API Key 只能讀取，寫入需要 OAuth 或 Service Account
- * 這裡使用 Google Apps Script Web App 作為中介
+ * 將未登錄商品寫入 Product_Master
+ * 透過 Google Apps Script Web App 作為中介寫入
  */
-export async function updateInventoryRaw(
-  inventoryData: Array<{
-    sku: string;
-    productName: string;
-    stock: number;
-    price: number;
-  }>
-): Promise<{ success: boolean; message: string; updatedCount: number }> {
-  // 由於 API Key 無法寫入，我們需要使用 Google Apps Script
-  // 這裡先回傳模擬結果，稍後會建立 Apps Script
+export async function writeUnregisteredProducts(
+  products: Array<{ sku: string; productName: string }>
+): Promise<{ success: boolean; message: string; count: number }> {
+  if (!APPS_SCRIPT_URL) {
+    throw new Error('Google Apps Script URL が設定されていません（VITE_GOOGLE_APPS_SCRIPT_URL）');
+  }
 
-  console.log('Updating inventory with data:', inventoryData.length, 'items');
+  const response = await fetch(APPS_SCRIPT_URL, {
+    method: 'POST',
+    body: JSON.stringify({ action: 'addUnregistered', products }),
+  });
 
-  // TODO: 實作 Google Apps Script Web App 呼叫
-  // 暫時回傳成功
+  if (!response.ok) {
+    throw new Error(`書き込みに失敗しました (${response.status})`);
+  }
+
+  const result = await response.json();
+
+  if (!result.success) {
+    throw new Error(result.message || '書き込みに失敗しました');
+  }
+
   return {
     success: true,
-    message: `成功更新 ${inventoryData.length} 筆庫存資料`,
-    updatedCount: inventoryData.length,
+    message: `${result.added} 件の未登録商品を Product_Master に追加しました${result.skipped > 0 ? `（${result.skipped} 件は既に存在）` : ''}`,
+    count: result.added,
   };
 }
 
