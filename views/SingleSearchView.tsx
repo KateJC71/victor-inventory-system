@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Product, CategoryType, CATEGORIES } from '../types';
 import { ProductCard } from '../components/ProductCard';
+import { ProductDetailModal } from '../components/ProductDetailModal';
 import { Search, X } from 'lucide-react';
 
 interface SingleSearchViewProps {
@@ -12,6 +13,7 @@ type FilterKey = 'all' | CategoryType | 'inStock';
 export const SingleSearchView: React.FC<SingleSearchViewProps> = ({ products }) => {
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<FilterKey>('all');
+  const [viewedProduct, setViewedProduct] = useState<Product | null>(null);
 
   const filteredByQuery = useMemo(() => {
     if (!query.trim()) return [];
@@ -104,17 +106,19 @@ export const SingleSearchView: React.FC<SingleSearchViewProps> = ({ products }) 
             {/* Mobile: row cards (horizontal layout); Desktop: grid */}
             <div className="md:hidden space-y-3 max-w-2xl mx-auto">
               {results.map(product => (
-                <ProductCard key={product.sku} product={product} variant="row" />
+                <ProductCard key={product.sku} product={product} variant="row" onClick={setViewedProduct} />
               ))}
             </div>
             <div className="hidden md:grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
               {results.map(product => (
-                <ProductCard key={product.sku} product={product} variant="grid" />
+                <ProductCard key={product.sku} product={product} variant="grid" onClick={setViewedProduct} />
               ))}
             </div>
           </>
         )}
       </div>
+
+      <ProductDetailModal product={viewedProduct} onClose={() => setViewedProduct(null)} />
     </div>
   );
 };

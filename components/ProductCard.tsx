@@ -11,11 +11,29 @@ interface ProductCardProps {
    * detail — full product-detail card (2-col on desktop, stacked on mobile)
    */
   variant?: 'row' | 'grid' | 'detail';
+  /** When supplied, row/grid cards become clickable (usually to open detail). */
+  onClick?: (product: Product) => void;
 }
 
-export const ProductCard: React.FC<ProductCardProps> = ({ product, variant = 'row' }) => {
+export const ProductCard: React.FC<ProductCardProps> = ({ product, variant = 'row', onClick }) => {
   const isOut = product.stock <= 0;
   const phLabel = product.sku.split(/[-\s]/)[0].slice(0, 7);
+
+  // Interaction props applied to the outer <article> when card is clickable
+  const interactionProps = onClick
+    ? {
+        onClick: () => onClick(product),
+        onKeyDown: (e: React.KeyboardEvent) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            onClick(product);
+          }
+        },
+        role: 'button' as const,
+        tabIndex: 0,
+        'aria-label': `${product.sku} の詳細を表示`,
+      }
+    : {};
 
   // Short subtitle: color / size / weight / grip (for compact views)
   const subParts = [product.color, product.size, product.weightClass, product.gripSize].filter(Boolean);
@@ -97,7 +115,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, variant = 'ro
   // ─────────────────────────────────────────────────────────────
   if (variant === 'grid') {
     return (
-      <article className={`vi-card vi-card-hover p-4 ${isOut ? 'vi-card-out' : ''}`}>
+      <article {...interactionProps} className={`vi-card vi-card-hover p-4 ${isOut ? 'vi-card-out' : ''}`}>
         {product.imageUrl ? (
           <div className="w-full aspect-square bg-stone-50 rounded-xl mb-4 flex items-center justify-center p-3 overflow-hidden">
             <img
@@ -128,7 +146,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, variant = 'ro
   // ROW variant (default) — horizontal list row for mobile lists
   // ─────────────────────────────────────────────────────────────
   return (
-    <article className={`vi-card vi-card-hover p-3 ${isOut ? 'vi-card-out' : ''}`}>
+    <article {...interactionProps} className={`vi-card vi-card-hover p-3 ${isOut ? 'vi-card-out' : ''}`}>
       <div className="flex gap-3.5">
         {product.imageUrl ? (
           <div className="w-[104px] h-[104px] bg-stone-50 rounded-xl flex-shrink-0 flex items-center justify-center p-1.5 overflow-hidden">

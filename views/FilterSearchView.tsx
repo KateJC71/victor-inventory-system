@@ -176,16 +176,16 @@ export const FilterSearchView: React.FC<FilterSearchViewProps> = ({ products }) 
 
   if (isSingleSku && selectedProduct) {
     return (
-      <div className="p-4 max-w-7xl mx-auto">
+      <div className="p-4 md:p-6 max-w-5xl mx-auto">
         <button
           onClick={handleBack}
-          className="mb-4 flex items-center gap-2 px-4 py-3 bg-stone-100 hover:bg-stone-200 rounded-lg text-stone-700 font-medium transition-colors w-full justify-center"
+          className="mb-5 inline-flex items-center gap-2 px-4 py-2.5 bg-stone-100 hover:bg-stone-200 rounded-lg text-stone-700 font-semibold transition-colors"
         >
-          <ArrowLeft size={20} />
+          <ArrowLeft size={18} />
           {selectedColor ? 'カラー選択に戻る' : 'Model一覧に戻る'}
         </button>
 
-        <ProductCard product={selectedProduct} />
+        <ProductCard product={selectedProduct} variant="detail" />
       </div>
     );
   }
@@ -341,7 +341,7 @@ export const FilterSearchView: React.FC<FilterSearchViewProps> = ({ products }) 
         {selectedProduct && (
           <div className="mt-6">
             <h4 className="text-sm font-bold text-stone-500 mb-3">選択中のSKU詳細</h4>
-            <ProductCard product={selectedProduct} />
+            <ProductCard product={selectedProduct} variant="detail" />
           </div>
         )}
       </div>
