@@ -140,6 +140,56 @@ export async function writeUnregisteredProducts(
 }
 
 /**
+ * 新增完整商品到 Product_Master（透過 Apps Script）
+ */
+export interface NewProductPayload {
+  sku: string;
+  modelName: string;
+  name?: string;
+  category: string;
+  masterName?: string;
+  subCategory?: string;
+  color?: string;
+  colorCode?: string;
+  size?: string;
+  price?: number;
+  stock?: number;
+  imageUrl?: string;
+  gender?: string;
+  weightClass?: string;
+  gripSize?: string;
+  remarks?: string;
+}
+
+export async function writeFullProduct(
+  product: NewProductPayload
+): Promise<{ success: boolean; message: string }> {
+  if (!APPS_SCRIPT_URL) {
+    throw new Error('Google Apps Script URL が設定されていません（VITE_GOOGLE_APPS_SCRIPT_URL）');
+  }
+
+  const response = await fetch(APPS_SCRIPT_URL, {
+    method: 'POST',
+    body: JSON.stringify({ action: 'addProduct', product }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`書き込みに失敗しました (${response.status})`);
+  }
+
+  const result = await response.json();
+
+  if (!result.success) {
+    throw new Error(result.message || '書き込みに失敗しました');
+  }
+
+  return {
+    success: true,
+    message: result.message || '商品を登録しました',
+  };
+}
+
+/**
  * 將 Google Drive 圖片連結轉換為可用的圖片 URL
  */
 export function convertGoogleDriveUrl(url: string): string {

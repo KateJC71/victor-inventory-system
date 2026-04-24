@@ -12,6 +12,10 @@ dist
 dist-ssr
 *.local
 
+# Apps Script 檔案（含 Cloudinary 金鑰，不公開）
+scripts/migrate-images-to-cloudinary.gs
+scripts/preview-image-matching.gs
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

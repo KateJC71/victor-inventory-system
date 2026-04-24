@@ -1,6 +1,7 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Product, CategoryType, CATEGORIES, CATEGORY_HIERARCHY } from '../types';
-import { PackagePlus, FolderTree, Save, ChevronDown, ChevronRight, Edit2, Check, X, Lock, Plus, Trash2 } from 'lucide-react';
+import { PackagePlus, FolderTree, Save, ChevronDown, ChevronRight, Edit2, Check, X, Lock, Plus, Trash2, Loader2, Sparkles } from 'lucide-react';
+import { writeFullProduct } from '../services/googleSheets';
 
 // 管理畫面密碼
 const ADMIN_PASSWORD = 'Victor2025';
@@ -110,11 +111,46 @@ const AddProductForm: React.FC<{ products: Product[], onAdd: (p: Product) => voi
     stock: 0,
     price: 0,
   });
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [autofillHint, setAutofillHint] = useState<string | null>(null);
+
+  // 既存型號清單（用於自動辨識）
+  const modelIndex = useMemo(() => {
+    const map = new Map<string, Product>();
+    products.forEach(p => {
+      const key = (p.modelName || '').trim().toUpperCase();
+      if (key && !map.has(key)) map.set(key, p);
+    });
+    return map;
+  }, [products]);
+
+  // 當 modelName 改變時，嘗試自動帶入其他欄位
+  useEffect(() => {
+    const model = (formData.modelName || '').trim().toUpperCase();
+    if (!model) {
+      setAutofillHint(null);
+      return;
+    }
+    const match = modelIndex.get(model);
+    if (match) {
+      setAutofillHint(`既存の型番「${match.modelName}」を検出 → 分類と価格を自動入力`);
+      setFormData(prev => ({
+        ...prev,
+        category: match.category,
+        subCategory: prev.subCategory || match.subCategory || '',
+        price: prev.price && Number(prev.price) > 0 ? prev.price : match.price,
+      }));
+    } else {
+      setAutofillHint(null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formData.modelName, modelIndex]);
 
   const existingSubCategories = useMemo(() => {
     if (!formData.category) return [];
     const subs = new Set<string>();
-    
+
     // 1. Add from static hierarchy definition (from PDF)
     const staticSubs = CATEGORY_HIERARCHY[formData.category as CategoryType] || [];
     staticSubs.forEach(s => subs.add(s));
@@ -125,14 +161,23 @@ const AddProductForm: React.FC<{ products: Product[], onAdd: (p: Product) => voi
       .forEach(p => {
         if (p.subCategory) subs.add(p.subCategory);
       });
-      
+
     return Array.from(subs).sort();
   }, [products, formData.category]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSubmitError(null);
+
     if (!formData.sku || !formData.name || !formData.modelName || !formData.category) {
-      alert('必須項目を入力してください');
+      setSubmitError('必須項目を入力してください（SKU / Model / 商品名 / 分類）');
+      return;
+    }
+
+    // 重複 SKU 檢查（前端先擋一道）
+    const skuUpper = String(formData.sku).trim().toUpperCase();
+    if (products.some(p => p.sku.trim().toUpperCase() === skuUpper)) {
+      setSubmitError(`SKU「${formData.sku}」は既に存在します`);
       return;
     }
 
@@ -141,18 +186,41 @@ const AddProductForm: React.FC<{ products: Product[], onAdd: (p: Product) => voi
       name: formData.name,
       modelName: formData.modelName,
       category: formData.category as CategoryType,
-      subCategory: formData.subCategory || 'General',
-      color: formData.color || '-',
-      size: formData.size || '-',
-      price: Number(formData.price),
-      stock: Number(formData.stock),
-      imageUrl: formData.imageUrl || 'https://placehold.co/400x400?text=No+Image',
+      subCategory: formData.subCategory || '',
+      color: formData.color || '',
+      size: formData.size || '',
+      price: Number(formData.price) || 0,
+      stock: Number(formData.stock) || 0,
+      imageUrl: formData.imageUrl || '',
     };
 
-    onAdd(newProduct);
-    alert('商品を登録しました');
-    // Reset critical fields but keep context
-    setFormData(prev => ({ ...prev, sku: '', name: '', color: '', size: '', stock: 0 }));
+    setSubmitting(true);
+    try {
+      await writeFullProduct({
+        sku: newProduct.sku,
+        modelName: newProduct.modelName,
+        name: newProduct.name,
+        category: newProduct.category,
+        subCategory: newProduct.subCategory,
+        color: newProduct.color,
+        colorCode: newProduct.color,
+        size: newProduct.size,
+        price: newProduct.price,
+        stock: newProduct.stock,
+        imageUrl: newProduct.imageUrl,
+      });
+
+      // Sheet 寫入成功 → 更新本地 state
+      onAdd(newProduct);
+      alert('商品を登録しました ✅');
+      // Reset critical fields but keep context
+      setFormData(prev => ({ ...prev, sku: '', name: '', color: '', size: '', stock: 0, imageUrl: '' }));
+      setAutofillHint(null);
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : '登録に失敗しました');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleChange = (field: keyof Product, value: any) => {
@@ -183,6 +251,12 @@ const AddProductForm: React.FC<{ products: Product[], onAdd: (p: Product) => voi
             placeholder="A170JR"
             required
           />
+          {autofillHint && (
+            <p className="mt-1 text-xs text-blue-600 flex items-center gap-1">
+              <Sparkles size={12} />
+              {autofillHint}
+            </p>
+          )}
         </div>
       </div>
 
@@ -284,12 +358,28 @@ const AddProductForm: React.FC<{ products: Product[], onAdd: (p: Product) => voi
         />
       </div>
 
+      {submitError && (
+        <div className="bg-red-50 border border-red-200 text-red-700 text-sm p-3 rounded">
+          ❌ {submitError}
+        </div>
+      )}
+
       <button
         type="submit"
-        className="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2 transition-colors"
+        disabled={submitting}
+        className="w-full mt-4 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2 transition-colors"
       >
-        <Save size={18} />
-        商品を保存
+        {submitting ? (
+          <>
+            <Loader2 size={18} className="animate-spin" />
+            保存中...
+          </>
+        ) : (
+          <>
+            <Save size={18} />
+            商品を保存（Google Sheet に書き込み）
+          </>
+        )}
       </button>
     </form>
   );
