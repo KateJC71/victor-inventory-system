@@ -231,12 +231,11 @@ const AddProductForm: React.FC<{ products: Product[], onAdd: (p: Product) => voi
     }
     const match = modelIndex.get(model);
     if (match) {
-      setAutofillHint(`既存の型番「${match.modelName}」を検出 → 分類・マスター名・性別・価格を自動入力`);
+      setAutofillHint(`既存の型番「${match.modelName}」を検出 → 分類・性別・価格を自動入力`);
       setFormData(prev => ({
         ...prev,
         category: match.category,
         subCategory: prev.subCategory || match.subCategory || '',
-        masterName: prev.masterName || match.masterName || '',
         gender: prev.gender || match.gender || '',
         price: prev.price && Number(prev.price) > 0 ? prev.price : match.price,
       }));
@@ -268,23 +267,25 @@ const AddProductForm: React.FC<{ products: Product[], onAdd: (p: Product) => voi
     e.preventDefault();
     setSubmitError(null);
 
-    if (!formData.sku || !formData.name || !formData.modelName || !formData.category) {
-      setSubmitError('必須項目を入力してください（SKU / Model / 商品名 / 分類）');
+    if (!formData.sku || !formData.modelName || !formData.category) {
+      setSubmitError('必須項目を入力してください（SKU / Model / 分類）');
       return;
     }
 
     // 重複 SKU 檢查（前端先擋一道）
-    const skuUpper = String(formData.sku).trim().toUpperCase();
+    const skuClean = String(formData.sku).trim();
+    const skuUpper = skuClean.toUpperCase();
     if (products.some(p => p.sku.trim().toUpperCase() === skuUpper)) {
-      setSubmitError(`SKU「${formData.sku}」は既に存在します`);
+      setSubmitError(`SKU「${skuClean}」は既に存在します`);
       return;
     }
 
+    // Master Name 與商品名自動使用 SKU
     const newProduct: Product = {
-      sku: formData.sku,
-      name: formData.name,
+      sku: skuClean,
+      name: skuClean,
       modelName: formData.modelName,
-      masterName: formData.masterName || '',
+      masterName: skuClean,
       category: formData.category as CategoryType,
       subCategory: formData.subCategory || '',
       color: formData.color || '',
@@ -302,12 +303,12 @@ const AddProductForm: React.FC<{ products: Product[], onAdd: (p: Product) => voi
         modelName: newProduct.modelName,
         name: newProduct.name,
         category: newProduct.category,
-        masterName: formData.masterName || '',
+        masterName: newProduct.masterName,
         subCategory: newProduct.subCategory,
         color: newProduct.color,
         colorCode: newProduct.color,
         size: newProduct.size,
-        gender: formData.gender || '',
+        gender: newProduct.gender,
         price: newProduct.price,
         stock: newProduct.stock,
         imageUrl: newProduct.imageUrl,
@@ -316,8 +317,8 @@ const AddProductForm: React.FC<{ products: Product[], onAdd: (p: Product) => voi
       // Sheet 寫入成功 → 更新本地 state
       onAdd(newProduct);
       alert('商品を登録しました ✅');
-      // Reset critical fields but keep context（masterName/gender/category 保留方便連續新增）
-      setFormData(prev => ({ ...prev, sku: '', name: '', color: '', size: '', stock: 0, imageUrl: '' }));
+      // Reset critical fields but keep context（gender/category 保留方便連續新增）
+      setFormData(prev => ({ ...prev, sku: '', color: '', size: '', stock: 0, imageUrl: '' }));
       setAutofillHint(null);
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : '登録に失敗しました');
@@ -360,30 +361,6 @@ const AddProductForm: React.FC<{ products: Product[], onAdd: (p: Product) => voi
               {autofillHint}
             </p>
           )}
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label className="block text-xs font-bold text-gray-500 mb-1">マスター名 / 系列 (任意)</label>
-          <input
-            type="text"
-            value={formData.masterName || ''}
-            onChange={e => handleChange('masterName' as any, e.target.value)}
-            className="w-full p-2 border border-gray-300 rounded outline-none"
-            placeholder="オーラスピード / ARS-100X-ULTRA 等"
-          />
-        </div>
-        <div>
-          <label className="block text-xs font-bold text-gray-500 mb-1">商品名 (必須)</label>
-          <input
-            type="text"
-            value={formData.name || ''}
-            onChange={e => handleChange('name', e.target.value)}
-            className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none"
-            placeholder="Junior Racket Red"
-            required
-          />
         </div>
       </div>
 
