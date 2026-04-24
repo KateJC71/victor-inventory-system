@@ -120,7 +120,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, variant = 'ro
           <img
             src={product.imageUrl}
             alt={product.sku}
-            className="w-full aspect-square object-cover rounded-xl mb-4 bg-stone-50"
+            className="w-full aspect-square object-contain rounded-xl mb-4 bg-stone-50"
             loading="lazy"
           />
         ) : (
@@ -150,7 +150,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, variant = 'ro
           <img
             src={product.imageUrl}
             alt={product.sku}
-            className="w-[104px] h-[104px] object-cover rounded-xl flex-shrink-0 bg-stone-50"
+            className="w-[104px] h-[104px] object-contain rounded-xl flex-shrink-0 bg-stone-50"
             loading="lazy"
           />
         ) : (

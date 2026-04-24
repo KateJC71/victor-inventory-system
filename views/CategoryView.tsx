@@ -247,7 +247,7 @@ export const CategoryView: React.FC<CategoryViewProps> = ({ products }) => {
         <div className="flex items-center gap-4 mb-6 border-b border-stone-100 pb-4">
            {displayedProducts[0] && (
              <div className="w-20 h-20 rounded-md overflow-hidden bg-stone-100 border border-stone-200 shadow-sm shrink-0">
-               <img src={displayedProducts[0].imageUrl} alt="preview" className="w-full h-full object-cover" />
+               <img src={displayedProducts[0].imageUrl} alt="preview" className="w-full h-full object-contain" />
              </div>
            )}
            <div>
@@ -433,7 +433,7 @@ export const CategoryView: React.FC<CategoryViewProps> = ({ products }) => {
                 className="flex flex-col vi-card active:scale-[0.98] transition-all overflow-hidden hover:border-stone-200 group"
               >
                 <div className="h-32 w-full bg-stone-100 relative">
-                  <img src={color.image} alt={color.name} className="w-full h-full object-cover" />
+                  <img src={color.image} alt={color.name} className="w-full h-full object-contain" />
                   <div className="absolute top-2 right-2 bg-black/60 text-white text-[10px] px-1.5 py-0.5 rounded-full">
                     {color.count} サイズ
                   </div>
@@ -481,7 +481,7 @@ export const CategoryView: React.FC<CategoryViewProps> = ({ products }) => {
                 className="flex items-center p-3 vi-card active:scale-[0.98] transition-transform text-left hover:border-stone-200 group"
               >
                  <div className="w-16 h-16 rounded-md bg-stone-100 overflow-hidden shrink-0 border border-stone-100">
-                    <img src={model.image} alt={model.name} className="w-full h-full object-cover" />
+                    <img src={model.image} alt={model.name} className="w-full h-full object-contain" />
                  </div>
                  <div className="ml-4 flex-1">
                     <h3 className="font-bold text-stone-900 group-hover:text-stone-900 transition-colors">{model.name}</h3>

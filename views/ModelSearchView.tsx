@@ -144,7 +144,7 @@ export const ModelSearchView: React.FC<ModelSearchViewProps> = ({ products }) =>
                                 {colors.map(color => (
                                   <div key={color} className="text-center flex-shrink-0">
                                     {colorImages[color] ? (
-                                      <img src={colorImages[color]} alt={color} className="w-14 h-14 object-cover rounded-lg mb-1 bg-stone-100" loading="lazy" />
+                                      <img src={colorImages[color]} alt={color} className="w-14 h-14 object-contain rounded-lg mb-1 bg-stone-100" loading="lazy" />
                                     ) : (
                                       <div className="vi-ph w-14 h-14 mb-1 text-xs">{color}</div>
                                     )}

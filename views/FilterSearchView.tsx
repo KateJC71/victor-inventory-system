@@ -210,7 +210,7 @@ export const FilterSearchView: React.FC<FilterSearchViewProps> = ({ products }) 
         <div className="flex items-center gap-4 mb-6 border-b border-stone-100 pb-4">
           {colorProducts[0] && (
             <div className="w-20 h-20 rounded-md overflow-hidden bg-stone-100 border border-stone-200 shadow-sm shrink-0">
-              <img src={colorProducts[0].imageUrl} alt="preview" className="w-full h-full object-cover" />
+              <img src={colorProducts[0].imageUrl} alt="preview" className="w-full h-full object-contain" />
             </div>
           )}
           <div>
@@ -377,7 +377,7 @@ export const FilterSearchView: React.FC<FilterSearchViewProps> = ({ products }) 
                 className="flex flex-col bg-white rounded-xl shadow-sm border border-stone-200 active:scale-[0.98] transition-all overflow-hidden hover:border-stone-200"
               >
                 <div className="h-32 w-full bg-stone-100 relative">
-                  <img src={color.image} alt={color.name} className="w-full h-full object-cover" />
+                  <img src={color.image} alt={color.name} className="w-full h-full object-contain" />
                   <div className="absolute top-2 right-2 bg-black/60 text-white text-[10px] px-1.5 py-0.5 rounded-full">
                     {color.count} サイズ
                   </div>
@@ -484,7 +484,7 @@ export const FilterSearchView: React.FC<FilterSearchViewProps> = ({ products }) 
                 className="flex items-center p-3 bg-white rounded-xl shadow-sm border border-stone-200 active:scale-[0.98] transition-transform text-left hover:border-stone-200 group"
               >
                 <div className="w-16 h-16 rounded-md bg-stone-100 overflow-hidden shrink-0 border border-stone-100">
-                  {model.image && <img src={model.image} alt={model.name} className="w-full h-full object-cover" />}
+                  {model.image && <img src={model.image} alt={model.name} className="w-full h-full object-contain" />}
                 </div>
                 <div className="ml-4 flex-1 min-w-0">
                   <div className="text-[10px] text-stone-400 mb-0.5">{model.category}</div>
