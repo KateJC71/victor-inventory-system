@@ -24,15 +24,15 @@
   .pill-orange { background: #FED7AA; color: #9A3412; }
   .pill-red { background: #FECACA; color: #991B1B; }
 
-  /* Category tags — 綠/橙/赤は在庫専用なので避ける */
+  /* Category tags — 緑/橙/赤は在庫専用、各カテゴリの色相を十分離す */
   .tag { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; }
   .tag-racket { background: #DBEAFE; color: #1E40AF; }  /* ラケット = 青 */
-  .tag-shoes  { background: #CFFAFE; color: #155E75; }  /* シューズ = 青綠 (teal) */
+  .tag-shoes  { background: #F0E4D4; color: #78350F; }  /* シューズ = 棕色 */
   .tag-apparel{ background: #EDE9FE; color: #5B21B6; }  /* アパレル = 紫 */
-  .tag-bag    { background: #FEF3C7; color: #78350F; }  /* バッグ = 琥珀 (yellow-brown) */
+  .tag-bag    { background: #FEF08A; color: #854D0E; }  /* バッグ = 黄 */
   .tag-grip   { background: #FCE7F3; color: #9D174D; }  /* グリップ = 粉 */
   .tag-string { background: #E2E8F0; color: #334155; }  /* ストリング = 石板灰 */
-  .tag-shuttle{ background: #E0E7FF; color: #3730A3; }  /* シャトル = 靛 (indigo) */
+  .tag-shuttle{ background: #E0E7FF; color: #3730A3; }  /* シャトル = 靛 */
   .tag-other  { background: #F5F5F4; color: #44403C; }  /* その他 = 灰 */
 
   .card-hover { transition: transform .15s, box-shadow .15s; }
@@ -56,8 +56,8 @@
       <div class="text-lg font-bold">UI モックアップ v2 — シニア向けに最適化</div>
     </div>
     <div class="flex gap-1 bg-stone-100 rounded-full p-1 text-sm">
-      <button id="btn-mobile" class="px-5 py-2 rounded-full bg-white shadow-sm font-semibold">📱 Mobile</button>
-      <button id="btn-desktop" class="px-5 py-2 rounded-full text-stone-500 font-semibold">💻 Desktop</button>
+      <button id="btn-mobile" class="px-5 py-2 rounded-full bg-white shadow-sm font-semibold">Mobile</button>
+      <button id="btn-desktop" class="px-5 py-2 rounded-full text-stone-500 font-semibold">Desktop</button>
     </div>
   </div>
   <div class="max-w-7xl mx-auto px-6 pb-3 flex gap-5 text-sm text-stone-700 overflow-x-auto no-scrollbar font-medium">
@@ -78,23 +78,19 @@
     <h1 class="text-2xl font-bold mb-3">一目で分かる・触れる・読める</h1>
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
       <div class="bg-stone-50 rounded-xl p-4 border border-stone-100">
-        <div class="text-2xl mb-1">🔍</div>
-        <div class="font-bold text-sm mb-1">大きな文字</div>
+        <div class="font-bold text-base mb-1">大きな文字</div>
         <p class="text-xs text-stone-600">本文 16px 以上、見出し 20px 以上</p>
       </div>
       <div class="bg-stone-50 rounded-xl p-4 border border-stone-100">
-        <div class="text-2xl mb-1">🟢🟠🔴</div>
-        <div class="font-bold text-sm mb-1">在庫を色で</div>
-        <p class="text-xs text-stone-600">緑=充分、橙=残少、赤=切れ の膠囊表示</p>
+        <div class="font-bold text-base mb-1">在庫を色で</div>
+        <p class="text-xs text-stone-600">緑=充分、橙=残少、赤=切れ</p>
       </div>
       <div class="bg-stone-50 rounded-xl p-4 border border-stone-100">
-        <div class="text-2xl mb-1">🏷️</div>
-        <div class="font-bold text-sm mb-1">カテゴリ色分け</div>
+        <div class="font-bold text-base mb-1">カテゴリ色分け</div>
         <p class="text-xs text-stone-600">大分類ごとに専用カラー</p>
       </div>
       <div class="bg-stone-50 rounded-xl p-4 border border-stone-100">
-        <div class="text-2xl mb-1">👆</div>
-        <div class="font-bold text-sm mb-1">タップしやすい</div>
+        <div class="font-bold text-base mb-1">タップしやすい</div>
         <p class="text-xs text-stone-600">ボタン最低 44px、間隔ゆったり</p>
       </div>
     </div>
@@ -154,7 +150,7 @@
               <div class="text-base font-bold truncate">ARS-100X-ULTRA3</div>
               <div class="text-xs text-stone-500 mt-0.5">オーラスピード</div>
               <div class="flex items-center justify-between mt-2">
-                <span class="pill pill-green">● 在庫 15点</span>
+                <span class="pill pill-green">在庫 15点</span>
                 <span class="text-lg font-extrabold">¥30,000</span>
               </div>
             </div>
@@ -171,7 +167,7 @@
               <div class="text-base font-bold truncate">ARS-3100A4UG5</div>
               <div class="text-xs text-stone-500 mt-0.5">オーラスピード</div>
               <div class="flex items-center justify-between mt-2">
-                <span class="pill pill-orange">⚠ 残り 3点</span>
+                <span class="pill pill-orange">残り 3点</span>
                 <span class="text-lg font-extrabold">¥22,000</span>
               </div>
             </div>
@@ -188,7 +184,7 @@
               <div class="text-base font-bold truncate">T-50004TTY-G-M</div>
               <div class="text-xs text-stone-500 mt-0.5">ゲームシャツ</div>
               <div class="flex items-center justify-between mt-2">
-                <span class="pill pill-green">● 在庫 67点</span>
+                <span class="pill pill-green">在庫 67点</span>
                 <span class="text-lg font-extrabold">¥9,500</span>
               </div>
             </div>
@@ -204,7 +200,7 @@
               <div class="text-base font-bold truncate">AC301A1</div>
               <div class="text-xs text-stone-500 mt-0.5">オーバーグリップ</div>
               <div class="flex items-center justify-between mt-2">
-                <span class="pill pill-red">✕ 在庫切れ</span>
+                <span class="pill pill-red">在庫切れ</span>
                 <span class="text-lg font-extrabold text-stone-400 line-through">¥800</span>
               </div>
             </div>
@@ -257,7 +253,7 @@
             <a class="px-5 py-2.5 rounded-full text-stone-600 hover:bg-stone-100">更新</a>
           </div>
         </div>
-        <div class="text-sm text-stone-500 font-medium">📊 商品数 510</div>
+        <div class="text-sm text-stone-500 font-medium">商品数 510</div>
       </div>
       <div class="flex">
         <aside class="w-72 border-r-2 border-stone-200 p-6 text-base">
@@ -281,9 +277,9 @@
           <div>
             <div class="section-label mb-3">在庫</div>
             <div class="space-y-3">
-              <label class="flex items-center gap-2.5 text-base font-medium"><input type="checkbox" class="w-5 h-5 accent-stone-900" checked/> <span class="pill pill-green">● あり</span></label>
-              <label class="flex items-center gap-2.5 text-base font-medium"><input type="checkbox" class="w-5 h-5 accent-stone-900" checked/> <span class="pill pill-orange">⚠ 残少</span></label>
-              <label class="flex items-center gap-2.5 text-base font-medium text-stone-500"><input type="checkbox" class="w-5 h-5"/> <span class="pill pill-red">✕ 切れ</span></label>
+              <label class="flex items-center gap-2.5 text-base font-medium"><input type="checkbox" class="w-5 h-5 accent-stone-900" checked/> <span class="pill pill-green">あり</span></label>
+              <label class="flex items-center gap-2.5 text-base font-medium"><input type="checkbox" class="w-5 h-5 accent-stone-900" checked/> <span class="pill pill-orange">残少</span></label>
+              <label class="flex items-center gap-2.5 text-base font-medium text-stone-500"><input type="checkbox" class="w-5 h-5"/> <span class="pill pill-red">切れ</span></label>
             </div>
           </div>
         </aside>
@@ -304,7 +300,7 @@
               <div class="text-base font-bold truncate">ARS-100X-ULTRA3</div>
               <div class="text-sm text-stone-500">オーラスピード</div>
               <div class="flex items-center justify-between mt-3">
-                <span class="pill pill-green">● 在庫 15点</span>
+                <span class="pill pill-green">在庫 15点</span>
                 <span class="text-xl font-extrabold">¥30,000</span>
               </div>
             </div>
@@ -314,7 +310,7 @@
               <div class="text-base font-bold truncate">ARS-3100A4UG5</div>
               <div class="text-sm text-stone-500">オーラスピード</div>
               <div class="flex items-center justify-between mt-3">
-                <span class="pill pill-orange">⚠ 残 3点</span>
+                <span class="pill pill-orange">残 3点</span>
                 <span class="text-xl font-extrabold">¥22,000</span>
               </div>
             </div>
@@ -324,7 +320,7 @@
               <div class="text-base font-bold truncate">ARS-3100I4UG5</div>
               <div class="text-sm text-stone-500">オーラスピード</div>
               <div class="flex items-center justify-between mt-3">
-                <span class="pill pill-green">● 在庫 8点</span>
+                <span class="pill pill-green">在庫 8点</span>
                 <span class="text-xl font-extrabold">¥22,000</span>
               </div>
             </div>
@@ -334,7 +330,7 @@
               <div class="text-base font-bold truncate">T-50004TTY-G-M</div>
               <div class="text-sm text-stone-500">ゲームシャツ</div>
               <div class="flex items-center justify-between mt-3">
-                <span class="pill pill-green">● 在庫 67点</span>
+                <span class="pill pill-green">在庫 67点</span>
                 <span class="text-xl font-extrabold">¥9,500</span>
               </div>
             </div>
@@ -344,7 +340,7 @@
               <div class="text-base font-bold truncate">A970NL-A230</div>
               <div class="text-sm text-stone-500">成人モデル</div>
               <div class="flex items-center justify-between mt-3">
-                <span class="pill pill-orange">⚠ 残 2点</span>
+                <span class="pill pill-orange">残 2点</span>
                 <span class="text-xl font-extrabold">¥14,500</span>
               </div>
             </div>
@@ -354,7 +350,7 @@
               <div class="text-base font-bold truncate">AC301A1</div>
               <div class="text-sm text-stone-500">オーバーグリップ</div>
               <div class="flex items-center justify-between mt-3">
-                <span class="pill pill-red">✕ 在庫切れ</span>
+                <span class="pill pill-red">在庫切れ</span>
                 <span class="text-xl font-extrabold text-stone-400 line-through">¥800</span>
               </div>
             </div>
@@ -386,7 +382,7 @@
               </div>
               <div class="text-right">
                 <div class="text-xl font-extrabold">¥9,500</div>
-                <span class="pill pill-green mt-1">● 計 67点</span>
+                <span class="pill pill-green mt-1">計 67点</span>
               </div>
             </div>
             <div class="border-t-2 border-stone-100 bg-stone-50 p-4">
@@ -419,7 +415,7 @@
             </div>
             <div class="text-right">
               <div class="text-xl font-extrabold">¥22,000</div>
-              <span class="pill pill-green mt-1">● 計 23点</span>
+              <span class="pill pill-green mt-1">計 23点</span>
             </div>
           </div>
           <div class="bg-white border-2 border-stone-200 rounded-2xl p-4 flex items-center justify-between">
@@ -430,7 +426,7 @@
             </div>
             <div class="text-right">
               <div class="text-xl font-extrabold">¥14,500</div>
-              <span class="pill pill-orange mt-1">⚠ 計 8点</span>
+              <span class="pill pill-orange mt-1">計 8点</span>
             </div>
           </div>
         </div>
@@ -455,7 +451,7 @@
             </div>
             <div class="text-right">
               <div class="text-2xl font-extrabold">¥9,500</div>
-              <span class="pill pill-green mt-2">● 計 67点</span>
+              <span class="pill pill-green mt-2">計 67点</span>
             </div>
           </div>
           <div class="flex gap-3 mb-4">
@@ -488,7 +484,7 @@
             </div>
             <div class="text-right">
               <div class="text-2xl font-extrabold">¥22,000</div>
-              <span class="pill pill-green mt-2">● 計 23点</span>
+              <span class="pill pill-green mt-2">計 23点</span>
             </div>
           </div>
           <div class="flex gap-3 mb-4">
@@ -606,7 +602,7 @@
               <div class="text-base font-bold">ARS-3100A4UG5</div>
               <div class="text-sm text-stone-500">4U / A</div>
               <div class="flex items-center justify-between mt-2.5">
-                <span class="pill pill-green">● 6点</span>
+                <span class="pill pill-green">6点</span>
                 <span class="text-lg font-extrabold">¥22,000</span>
               </div>
             </div>
@@ -616,7 +612,7 @@
               <div class="text-base font-bold">ARS-3100I4UG5</div>
               <div class="text-sm text-stone-500">4U / I</div>
               <div class="flex items-center justify-between mt-2.5">
-                <span class="pill pill-green">● 8点</span>
+                <span class="pill pill-green">8点</span>
                 <span class="text-lg font-extrabold">¥22,000</span>
               </div>
             </div>
@@ -626,7 +622,7 @@
               <div class="text-base font-bold">ARS-3100M4UG5</div>
               <div class="text-sm text-stone-500">4U / M</div>
               <div class="flex items-center justify-between mt-2.5">
-                <span class="pill pill-green">● 5点</span>
+                <span class="pill pill-green">5点</span>
                 <span class="text-lg font-extrabold">¥22,000</span>
               </div>
             </div>
@@ -636,7 +632,7 @@
               <div class="text-base font-bold">ARS-3100R4UG5</div>
               <div class="text-sm text-stone-500">4U / R</div>
               <div class="flex items-center justify-between mt-2.5">
-                <span class="pill pill-orange">⚠ 2点</span>
+                <span class="pill pill-orange">2点</span>
                 <span class="text-lg font-extrabold">¥22,000</span>
               </div>
             </div>
@@ -660,7 +656,7 @@
         <div class="px-5 py-4 border-b border-stone-100 text-lg font-bold text-center">条件で絞り込み</div>
         <div class="p-4 space-y-5">
           <div>
-            <div class="text-sm font-bold text-stone-700 mb-2">💴 価格帯</div>
+            <div class="text-sm font-bold text-stone-700 mb-2">価格帯</div>
             <div class="grid grid-cols-2 gap-2">
               <button class="py-3 rounded-xl border-2 border-stone-900 bg-stone-900 text-white text-sm font-bold">〜¥5,000</button>
               <button class="py-3 rounded-xl border-2 border-stone-200 text-stone-700 text-sm font-semibold">¥5k-10k</button>
@@ -669,7 +665,7 @@
             </div>
           </div>
           <div>
-            <div class="text-sm font-bold text-stone-700 mb-2">🏷️ カテゴリ</div>
+            <div class="text-sm font-bold text-stone-700 mb-2">カテゴリ</div>
             <div class="flex flex-wrap gap-2">
               <button class="px-3 py-2 rounded-lg bg-stone-900 text-white text-sm font-bold">すべて</button>
               <button class="px-3 py-2 rounded-lg text-sm font-bold tag tag-racket">ラケット</button>
@@ -687,7 +683,7 @@
                   <div class="flex items-center gap-1.5 mb-1"><span class="tag tag-grip">グリップ</span></div>
                   <div class="text-base font-bold">AC301A1</div>
                   <div class="flex items-center justify-between mt-2">
-                    <span class="pill pill-green">● 50点</span>
+                    <span class="pill pill-green">50点</span>
                     <span class="text-base font-extrabold">¥800</span>
                   </div>
                 </div>
@@ -698,7 +694,7 @@
                   <div class="flex items-center gap-1.5 mb-1"><span class="tag tag-string">ストリング</span></div>
                   <div class="text-base font-bold">VBS-69N-W</div>
                   <div class="flex items-center justify-between mt-2">
-                    <span class="pill pill-green">● 120点</span>
+                    <span class="pill pill-green">120点</span>
                     <span class="text-base font-extrabold">¥3,200</span>
                   </div>
                 </div>
@@ -717,7 +713,7 @@
       <div class="p-8">
         <div class="grid grid-cols-3 gap-6 mb-6">
           <div>
-            <div class="text-sm font-bold text-stone-700 mb-3">💴 価格帯</div>
+            <div class="text-sm font-bold text-stone-700 mb-3">価格帯</div>
             <div class="grid grid-cols-2 gap-2">
               <button class="py-3 rounded-xl bg-stone-900 text-white font-bold">〜¥5,000</button>
               <button class="py-3 rounded-xl border-2 border-stone-200 font-semibold">¥5k-10k</button>
@@ -726,7 +722,7 @@
             </div>
           </div>
           <div>
-            <div class="text-sm font-bold text-stone-700 mb-3">🏷️ カテゴリ</div>
+            <div class="text-sm font-bold text-stone-700 mb-3">カテゴリ</div>
             <div class="flex flex-wrap gap-2">
               <button class="px-3 py-2 rounded-lg bg-stone-900 text-white font-bold">すべて</button>
               <button class="px-3 py-2 rounded-lg font-bold tag tag-racket">ラケット</button>
@@ -735,11 +731,11 @@
             </div>
           </div>
           <div>
-            <div class="text-sm font-bold text-stone-700 mb-3">📦 在庫状況</div>
+            <div class="text-sm font-bold text-stone-700 mb-3">在庫状況</div>
             <div class="space-y-3">
-              <label class="flex items-center gap-3 font-semibold"><input type="checkbox" class="w-5 h-5 accent-stone-900" checked/> <span class="pill pill-green">● 在庫あり</span></label>
-              <label class="flex items-center gap-3 font-semibold"><input type="checkbox" class="w-5 h-5 accent-stone-900" checked/> <span class="pill pill-orange">⚠ 残少</span></label>
-              <label class="flex items-center gap-3 font-semibold text-stone-500"><input type="checkbox" class="w-5 h-5"/> <span class="pill pill-red">✕ 在庫切れ</span></label>
+              <label class="flex items-center gap-3 font-semibold"><input type="checkbox" class="w-5 h-5 accent-stone-900" checked/> <span class="pill pill-green">在庫あり</span></label>
+              <label class="flex items-center gap-3 font-semibold"><input type="checkbox" class="w-5 h-5 accent-stone-900" checked/> <span class="pill pill-orange">残少</span></label>
+              <label class="flex items-center gap-3 font-semibold text-stone-500"><input type="checkbox" class="w-5 h-5"/> <span class="pill pill-red">在庫切れ</span></label>
             </div>
           </div>
         </div>
@@ -750,7 +746,7 @@
             <div class="flex items-center gap-1.5 mb-1.5"><span class="tag tag-grip">グリップ</span></div>
             <div class="text-base font-bold">AC301A1</div>
             <div class="flex items-center justify-between mt-2.5">
-              <span class="pill pill-green">● 50点</span>
+              <span class="pill pill-green">50点</span>
               <span class="text-lg font-extrabold">¥800</span>
             </div>
           </div>
@@ -759,7 +755,7 @@
             <div class="flex items-center gap-1.5 mb-1.5"><span class="tag tag-string">ストリング</span></div>
             <div class="text-base font-bold">VBS-69N-W</div>
             <div class="flex items-center justify-between mt-2.5">
-              <span class="pill pill-green">● 120点</span>
+              <span class="pill pill-green">120点</span>
               <span class="text-lg font-extrabold">¥3,200</span>
             </div>
           </div>
@@ -768,7 +764,7 @@
             <div class="flex items-center gap-1.5 mb-1.5"><span class="tag tag-apparel">アパレル</span></div>
             <div class="text-base font-bold">T-50004TTY</div>
             <div class="flex items-center justify-between mt-2.5">
-              <span class="pill pill-green">● 67点</span>
+              <span class="pill pill-green">67点</span>
               <span class="text-lg font-extrabold">¥9,500</span>
             </div>
           </div>
@@ -777,7 +773,7 @@
             <div class="flex items-center gap-1.5 mb-1.5"><span class="tag tag-shoes">シューズ</span></div>
             <div class="text-base font-bold">A970NL-A230</div>
             <div class="flex items-center justify-between mt-2.5">
-              <span class="pill pill-orange">⚠ 2点</span>
+              <span class="pill pill-orange">2点</span>
               <span class="text-lg font-extrabold">¥14,500</span>
             </div>
           </div>
@@ -814,7 +810,7 @@
               <input class="w-full px-4 py-3 border-2 border-stone-200 rounded-xl text-base font-medium" value="ARS-3100"/>
             </div>
             <div class="bg-blue-50 border-2 border-blue-200 rounded-xl p-3 text-sm text-blue-900 font-semibold flex gap-2">
-              <span>✨</span><span>既存の型番を検出 → 自動入力しました</span>
+              <span class="font-bold">自動入力</span>　既存の型番を検出 → 分類・価格を自動入力
             </div>
             <div class="grid grid-cols-2 gap-3">
               <div>
@@ -829,10 +825,10 @@
             <div>
               <label class="block text-sm font-bold text-stone-700 mb-1.5">画像</label>
               <div class="border-2 border-dashed border-stone-300 rounded-2xl p-8 text-center text-stone-500 font-semibold">
-                📷<br/><span class="text-sm">ドラッグ または タップ</span>
+                画像をドラッグ<br/><span class="text-sm font-normal">または タップして選択</span>
               </div>
             </div>
-            <button class="btn-primary w-full mt-4 text-base py-4">💾 商品を保存</button>
+            <button class="btn-primary w-full mt-4 text-base py-4">商品を保存</button>
           </div>
         </div>
       </div>
@@ -863,7 +859,7 @@
             </div>
           </div>
           <div class="bg-blue-50 border-2 border-blue-200 rounded-xl p-3.5 text-base text-blue-900 font-semibold flex gap-2">
-            <span>✨</span><span>既存の型番「ARS-3100」を検出 → 分類・性別・価格を自動入力しました</span>
+            <span class="font-bold">自動入力</span>　既存の型番「ARS-3100」を検出 → 分類・性別・価格を自動入力しました
           </div>
           <div class="grid grid-cols-2 gap-4">
             <div><label class="block text-sm font-bold text-stone-700 mb-1.5">大分類</label><select class="w-full px-4 py-3 border-2 border-stone-200 rounded-xl text-base font-medium bg-white"><option>ラケット</option></select></div>
@@ -877,13 +873,13 @@
           <div>
             <label class="block text-sm font-bold text-stone-700 mb-1.5">商品画像</label>
             <div class="border-2 border-dashed border-stone-300 hover:border-stone-500 rounded-2xl p-10 text-center text-stone-500 font-semibold">
-              📷 画像をドラッグ または クリック<br/>
+              画像をドラッグ または クリックして選択<br/>
               <span class="text-sm text-stone-400">JPG / PNG / WebP</span>
             </div>
           </div>
           <div class="flex justify-end gap-3 pt-2">
             <button class="btn-secondary">キャンセル</button>
-            <button class="btn-primary">💾 商品を保存</button>
+            <button class="btn-primary">商品を保存</button>
           </div>
         </div>
       </div>
