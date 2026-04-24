@@ -15,6 +15,10 @@ dist-ssr
 # Apps Script 檔案（含 Cloudinary 金鑰，不公開）
 scripts/migrate-images-to-cloudinary.gs
 scripts/preview-image-matching.gs
+apps-script/migrate-images-to-cloudinary.js
+
+# Clasp 認證（絕對不上傳）
+.clasprc.json
 
 # Editor directories and files
 .vscode/*

@@ -190,6 +190,57 @@ export async function writeFullProduct(
 }
 
 /**
+ * 批次新增商品到 Sheet（Excel 一括登録用）
+ */
+export interface BulkProductPayload {
+  sku: string;
+  modelName?: string;
+  category?: string;
+  subCategory?: string;
+  gender?: string;
+  colorCode?: string;
+  color?: string;
+  size?: string;
+  weightClass?: string;
+  gripSize?: string;
+  price?: number;
+  stock?: number;
+  imageUrl?: string;
+  remarks?: string;
+}
+
+export async function writeProductsBatch(
+  products: BulkProductPayload[]
+): Promise<{ success: boolean; added: number; skipped: number; skippedSkus: string[]; message: string }> {
+  if (!APPS_SCRIPT_URL) {
+    throw new Error('Google Apps Script URL が設定されていません');
+  }
+
+  const response = await fetch(APPS_SCRIPT_URL, {
+    method: 'POST',
+    body: JSON.stringify({ action: 'addProductsBatch', products }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`一括書き込みに失敗しました (${response.status})`);
+  }
+
+  const result = await response.json();
+
+  if (!result.success) {
+    throw new Error(result.message || '一括書き込みに失敗しました');
+  }
+
+  return {
+    success: true,
+    added: result.added || 0,
+    skipped: result.skipped || 0,
+    skippedSkus: result.skippedSkus || [],
+    message: result.message || '',
+  };
+}
+
+/**
  * 上傳圖片到 Cloudinary（使用 unsigned upload preset）
  * 需要先在 Vercel 設定 VITE_CLOUDINARY_UPLOAD_PRESET 環境變數
  */

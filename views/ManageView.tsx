@@ -1,7 +1,8 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
+import * as XLSX from 'xlsx';
 import { Product, CategoryType, CATEGORIES, CATEGORY_HIERARCHY, GENDERS } from '../types';
-import { PackagePlus, FolderTree, Save, ChevronDown, ChevronRight, Edit2, Check, X, Lock, Plus, Trash2, Loader2, Sparkles, Upload, Image as ImageIcon } from 'lucide-react';
-import { writeFullProduct, uploadImageToCloudinary } from '../services/googleSheets';
+import { PackagePlus, FolderTree, Save, ChevronDown, ChevronRight, Edit2, Check, X, Lock, Plus, Trash2, Loader2, Sparkles, Upload, Image as ImageIcon, FileSpreadsheet, Download, AlertTriangle, CheckCircle } from 'lucide-react';
+import { writeFullProduct, uploadImageToCloudinary, writeProductsBatch, BulkProductPayload } from '../services/googleSheets';
 
 // --- Sub Component: Image Upload Field ---
 const ImageUploadField: React.FC<{ value: string; onChange: (url: string) => void }> = ({ value, onChange }) => {
@@ -111,7 +112,7 @@ interface ManageViewProps {
 }
 
 export const ManageView: React.FC<ManageViewProps> = ({ products, onAddProduct, onUpdateSubCategory, onDeleteSubCategory }) => {
-  const [activeSubTab, setActiveSubTab] = useState<'add' | 'structure'>('add');
+  const [activeSubTab, setActiveSubTab] = useState<'add' | 'bulk' | 'structure'>('add');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -167,11 +168,11 @@ export const ManageView: React.FC<ManageViewProps> = ({ products, onAddProduct, 
 
   return (
     <div className="p-4 max-w-3xl mx-auto min-h-[80vh]">
-      <div className="flex justify-center mb-6">
+      <div className="flex justify-center mb-6 overflow-x-auto">
         <div className="bg-gray-100 p-1 rounded-lg flex text-sm font-medium">
           <button
             onClick={() => setActiveSubTab('add')}
-            className={`px-6 py-2 rounded-md transition-all flex items-center gap-2 ${
+            className={`px-4 py-2 rounded-md transition-all flex items-center gap-2 whitespace-nowrap ${
               activeSubTab === 'add' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'
             }`}
           >
@@ -179,8 +180,17 @@ export const ManageView: React.FC<ManageViewProps> = ({ products, onAddProduct, 
             商品登録
           </button>
           <button
+            onClick={() => setActiveSubTab('bulk')}
+            className={`px-4 py-2 rounded-md transition-all flex items-center gap-2 whitespace-nowrap ${
+              activeSubTab === 'bulk' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            <FileSpreadsheet size={16} />
+            一括登録
+          </button>
+          <button
             onClick={() => setActiveSubTab('structure')}
-            className={`px-6 py-2 rounded-md transition-all flex items-center gap-2 ${
+            className={`px-4 py-2 rounded-md transition-all flex items-center gap-2 whitespace-nowrap ${
               activeSubTab === 'structure' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'
             }`}
           >
@@ -190,11 +200,9 @@ export const ManageView: React.FC<ManageViewProps> = ({ products, onAddProduct, 
         </div>
       </div>
 
-      {activeSubTab === 'add' ? (
-        <AddProductForm products={products} onAdd={onAddProduct} />
-      ) : (
-        <CategoryStructureEditor products={products} onUpdate={onUpdateSubCategory} onDelete={onDeleteSubCategory} />
-      )}
+      {activeSubTab === 'add' && <AddProductForm products={products} onAdd={onAddProduct} />}
+      {activeSubTab === 'bulk' && <BulkImportForm products={products} onAdd={onAddProduct} />}
+      {activeSubTab === 'structure' && <CategoryStructureEditor products={products} onUpdate={onUpdateSubCategory} onDelete={onDeleteSubCategory} />}
     </div>
   );
 };
@@ -489,6 +497,396 @@ const AddProductForm: React.FC<{ products: Product[], onAdd: (p: Product) => voi
         )}
       </button>
     </form>
+  );
+};
+
+// --- Sub Component: Bulk Import Form (Excel 一括登録) ---
+
+type BulkRow = BulkProductPayload & { _rowIndex: number };
+type BulkStage = 'idle' | 'preview' | 'submitting' | 'done';
+
+// Excel テンプレートのヘッダー行（日本語）とフィールドの対応
+const BULK_HEADERS: Array<{ key: keyof BulkProductPayload; label: string; example: string }> = [
+  { key: 'sku',          label: 'SKU（必須）',       example: 'ARS-3100A4UG5' },
+  { key: 'modelName',    label: 'Model Name（必須）', example: 'ARS-3100' },
+  { key: 'category',     label: '大分類（必須）',     example: 'ラケット' },
+  { key: 'subCategory',  label: '小分類',             example: 'オーラスピード' },
+  { key: 'gender',       label: '性別',               example: 'ユニ' },
+  { key: 'colorCode',    label: 'カラーコード',       example: 'A' },
+  { key: 'color',        label: 'カラー',             example: 'A' },
+  { key: 'size',         label: 'サイズ',             example: '4U' },
+  { key: 'weightClass',  label: '重量',               example: '4U' },
+  { key: 'gripSize',     label: 'グリップ',           example: 'G5' },
+  { key: 'price',        label: '価格',               example: '30000' },
+  { key: 'stock',        label: '在庫',               example: '0' },
+  { key: 'imageUrl',     label: '画像URL',            example: '' },
+];
+
+const BulkImportForm: React.FC<{ products: Product[], onAdd: (p: Product) => void }> = ({ products, onAdd }) => {
+  const [stage, setStage] = useState<BulkStage>('idle');
+  const [rows, setRows] = useState<BulkRow[]>([]);
+  const [parseError, setParseError] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [result, setResult] = useState<{ added: number; skipped: number; skippedSkus: string[] } | null>(null);
+  const [dragOver, setDragOver] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const existingSkuSet = useMemo(() => {
+    const s = new Set<string>();
+    products.forEach(p => s.add(p.sku.trim().toUpperCase()));
+    return s;
+  }, [products]);
+
+  // 檔案內重複 SKU
+  const duplicateInFile = useMemo(() => {
+    const seen = new Set<string>();
+    const dup = new Set<string>();
+    rows.forEach(r => {
+      const key = (r.sku || '').trim().toUpperCase();
+      if (!key) return;
+      if (seen.has(key)) dup.add(key);
+      else seen.add(key);
+    });
+    return dup;
+  }, [rows]);
+
+  const newCount = useMemo(
+    () => rows.filter(r => r.sku && !existingSkuSet.has(r.sku.trim().toUpperCase())).length,
+    [rows, existingSkuSet]
+  );
+  const existingCount = rows.length - newCount;
+
+  const handleDownloadTemplate = () => {
+    const aoa: any[][] = [
+      BULK_HEADERS.map(h => h.label),
+      BULK_HEADERS.map(h => h.example),  // 範例列
+    ];
+    const ws = XLSX.utils.aoa_to_sheet(aoa);
+    // 列寬調整
+    ws['!cols'] = BULK_HEADERS.map(h => ({ wch: Math.max(h.label.length, 12) + 2 }));
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, '商品一括登録');
+    XLSX.writeFile(wb, 'Victor_商品一括登録_テンプレート.xlsx');
+  };
+
+  const parseFile = async (file: File) => {
+    setParseError(null);
+    setResult(null);
+    setStage('idle');
+    setRows([]);
+
+    try {
+      const buffer = await file.arrayBuffer();
+      const wb = XLSX.read(buffer, { type: 'array' });
+      const sheetName = wb.SheetNames[0];
+      const ws = wb.Sheets[sheetName];
+      const data: any[][] = XLSX.utils.sheet_to_json(ws, { header: 1, blankrows: false, defval: '' });
+
+      if (data.length < 2) {
+        setParseError('データ行がありません（ヘッダーのみ）');
+        return;
+      }
+
+      const header = data[0].map((h: any) => String(h).trim());
+
+      // 比對欄位 → index
+      const colIdx: Record<string, number> = {};
+      BULK_HEADERS.forEach(h => {
+        const idx = header.findIndex(c => c === h.label || c.replace(/（.+?）/g, '') === h.label.replace(/（.+?）/g, ''));
+        colIdx[h.key] = idx;
+      });
+
+      if (colIdx['sku'] < 0) {
+        setParseError('ヘッダー「SKU（必須）」が見つかりません。テンプレートをダウンロードして使ってください。');
+        return;
+      }
+
+      const parsed: BulkRow[] = [];
+      for (let i = 1; i < data.length; i++) {
+        const row = data[i];
+        const sku = String(row[colIdx['sku']] || '').trim();
+        if (!sku) continue;  // 空行スキップ
+
+        const r: BulkRow = {
+          _rowIndex: i + 1,
+          sku,
+          modelName: String(row[colIdx['modelName']] || '').trim(),
+          category: String(row[colIdx['category']] || '').trim(),
+          subCategory: String(row[colIdx['subCategory']] || '').trim(),
+          gender: String(row[colIdx['gender']] || '').trim(),
+          colorCode: String(row[colIdx['colorCode']] || '').trim(),
+          color: String(row[colIdx['color']] || '').trim(),
+          size: String(row[colIdx['size']] || '').trim(),
+          weightClass: String(row[colIdx['weightClass']] || '').trim(),
+          gripSize: String(row[colIdx['gripSize']] || '').trim(),
+          price: Number(row[colIdx['price']]) || 0,
+          stock: Number(row[colIdx['stock']]) || 0,
+          imageUrl: String(row[colIdx['imageUrl']] || '').trim(),
+        };
+        parsed.push(r);
+      }
+
+      if (parsed.length === 0) {
+        setParseError('有効なデータがありません');
+        return;
+      }
+
+      setRows(parsed);
+      setStage('preview');
+    } catch (err) {
+      setParseError(err instanceof Error ? err.message : 'ファイル解析に失敗');
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(false);
+    const file = e.dataTransfer.files[0];
+    if (file) parseFile(file);
+  };
+
+  const handleSubmit = async () => {
+    if (rows.length === 0) return;
+    setSubmitError(null);
+    setStage('submitting');
+    try {
+      const payload: BulkProductPayload[] = rows.map(({ _rowIndex, ...rest }) => rest);
+      const res = await writeProductsBatch(payload);
+      setResult({ added: res.added, skipped: res.skipped, skippedSkus: res.skippedSkus });
+
+      // 本地 state 追加（避免要等下次 refresh）
+      rows.forEach(r => {
+        const skuUpper = (r.sku || '').trim().toUpperCase();
+        if (existingSkuSet.has(skuUpper)) return;
+        onAdd({
+          sku: r.sku,
+          name: r.sku,
+          modelName: r.modelName || '',
+          masterName: r.sku,
+          category: (r.category as CategoryType) || CategoryType.Others,
+          subCategory: r.subCategory || '',
+          color: r.color || '',
+          size: r.size || '',
+          gender: r.gender || '',
+          price: Number(r.price) || 0,
+          stock: Number(r.stock) || 0,
+          imageUrl: r.imageUrl || '',
+        });
+      });
+
+      setStage('done');
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : '登録に失敗');
+      setStage('preview');
+    }
+  };
+
+  const handleReset = () => {
+    setStage('idle');
+    setRows([]);
+    setParseError(null);
+    setSubmitError(null);
+    setResult(null);
+  };
+
+  // ===== 結果畫面 =====
+  if (stage === 'done' && result) {
+    return (
+      <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+        <div className="flex flex-col items-center text-center py-8">
+          <div className="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mb-4">
+            <CheckCircle className="text-green-600" size={32} />
+          </div>
+          <h3 className="text-xl font-bold text-gray-900 mb-2">一括登録が完了しました</h3>
+          <p className="text-gray-600 mb-4">
+            <span className="text-2xl font-bold text-green-600">{result.added}</span> 件追加 / {result.skipped > 0 ? <span><span className="text-yellow-600 font-bold">{result.skipped}</span> 件スキップ</span> : null}
+          </p>
+          {result.skippedSkus && result.skippedSkus.length > 0 && (
+            <div className="mt-2 p-3 bg-yellow-50 rounded text-left w-full max-w-md">
+              <p className="text-xs font-bold text-yellow-800 mb-1">⚠️ 既存のためスキップした SKU：</p>
+              <p className="text-xs text-yellow-700 break-all">{result.skippedSkus.join(', ')}{result.skippedSkus.length >= 20 ? ' ...' : ''}</p>
+            </div>
+          )}
+          <button
+            onClick={handleReset}
+            className="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg"
+          >
+            続けて別のファイルを登録
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // ===== 預覽畫面 =====
+  if (stage === 'preview' || stage === 'submitting') {
+    return (
+      <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 space-y-4">
+        <h3 className="text-lg font-bold text-gray-900">登録内容の確認</h3>
+
+        <div className="grid grid-cols-3 gap-3 text-center">
+          <div className="bg-blue-50 rounded-lg p-3">
+            <div className="text-2xl font-bold text-blue-600">{rows.length}</div>
+            <div className="text-xs text-gray-600">読み込み</div>
+          </div>
+          <div className="bg-green-50 rounded-lg p-3">
+            <div className="text-2xl font-bold text-green-600">{newCount}</div>
+            <div className="text-xs text-gray-600">新規追加</div>
+          </div>
+          <div className="bg-yellow-50 rounded-lg p-3">
+            <div className="text-2xl font-bold text-yellow-600">{existingCount}</div>
+            <div className="text-xs text-gray-600">既存スキップ</div>
+          </div>
+        </div>
+
+        {duplicateInFile.size > 0 && (
+          <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 text-sm text-orange-800 flex gap-2">
+            <AlertTriangle size={16} className="flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="font-bold">ファイル内に重複 SKU があります（{duplicateInFile.size} 件）</p>
+              <p className="text-xs">重複分は 1 件のみ追加されます。</p>
+            </div>
+          </div>
+        )}
+
+        <div className="overflow-x-auto border border-gray-200 rounded-lg">
+          <table className="min-w-full text-xs">
+            <thead className="bg-gray-50 border-b border-gray-200">
+              <tr>
+                <th className="p-2 text-left">行</th>
+                <th className="p-2 text-left">SKU</th>
+                <th className="p-2 text-left">Model</th>
+                <th className="p-2 text-left">大分類</th>
+                <th className="p-2 text-left">小分類</th>
+                <th className="p-2 text-left">色</th>
+                <th className="p-2 text-left">サイズ</th>
+                <th className="p-2 text-right">価格</th>
+                <th className="p-2 text-right">在庫</th>
+                <th className="p-2 text-left">状態</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.slice(0, 100).map((r, idx) => {
+                const skuUpper = (r.sku || '').trim().toUpperCase();
+                const isExisting = existingSkuSet.has(skuUpper);
+                const isDupInFile = duplicateInFile.has(skuUpper);
+                return (
+                  <tr key={idx} className={`border-b border-gray-100 ${isExisting ? 'bg-yellow-50' : ''}`}>
+                    <td className="p-2 text-gray-400">{r._rowIndex}</td>
+                    <td className="p-2 font-mono">{r.sku}</td>
+                    <td className="p-2">{r.modelName}</td>
+                    <td className="p-2">{r.category}</td>
+                    <td className="p-2">{r.subCategory}</td>
+                    <td className="p-2">{r.color}</td>
+                    <td className="p-2">{r.size}</td>
+                    <td className="p-2 text-right">{r.price ? `¥${Number(r.price).toLocaleString()}` : ''}</td>
+                    <td className="p-2 text-right">{r.stock || 0}</td>
+                    <td className="p-2">
+                      {isExisting
+                        ? <span className="text-yellow-600">既存</span>
+                        : isDupInFile
+                        ? <span className="text-orange-600">重複</span>
+                        : <span className="text-green-600">新規</span>}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+          {rows.length > 100 && (
+            <div className="p-3 text-center text-xs text-gray-500 bg-gray-50">
+              ...他 {rows.length - 100} 行（全て登録されます）
+            </div>
+          )}
+        </div>
+
+        {submitError && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-600">
+            {submitError}
+          </div>
+        )}
+
+        <div className="flex gap-3 justify-end pt-2">
+          <button
+            type="button"
+            onClick={handleReset}
+            disabled={stage === 'submitting'}
+            className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg disabled:opacity-50"
+          >
+            キャンセル
+          </button>
+          <button
+            type="button"
+            onClick={handleSubmit}
+            disabled={stage === 'submitting' || newCount === 0}
+            className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg flex items-center gap-2 disabled:opacity-50"
+          >
+            {stage === 'submitting' ? (
+              <><Loader2 size={16} className="animate-spin" /> 登録中...</>
+            ) : (
+              <><Save size={16} /> {newCount} 件を登録</>
+            )}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // ===== 初始畫面 =====
+  return (
+    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 space-y-4">
+      <div className="bg-blue-50 rounded-lg p-4 text-sm text-blue-800">
+        <p className="font-bold mb-1">📝 使い方</p>
+        <ol className="list-decimal ml-5 space-y-1 text-xs">
+          <li>「テンプレートをダウンロード」で Excel ファイルを取得</li>
+          <li>商品情報を入力（1 行 1 商品、SKU / Model Name / 大分類 は必須）</li>
+          <li>ファイルをドラッグまたはクリックしてアップロード</li>
+          <li>プレビューで確認 →「登録」をクリック</li>
+        </ol>
+        <p className="mt-2 text-xs text-blue-700">
+          ℹ️ 既存の SKU は自動的にスキップされます（上書きしません）
+        </p>
+      </div>
+
+      <button
+        type="button"
+        onClick={handleDownloadTemplate}
+        className="w-full flex items-center justify-center gap-2 py-3 border-2 border-blue-200 hover:border-blue-400 hover:bg-blue-50 rounded-lg text-blue-700 font-medium transition-colors"
+      >
+        <Download size={18} />
+        テンプレートをダウンロード (.xlsx)
+      </button>
+
+      <div
+        onDragOver={e => { e.preventDefault(); setDragOver(true); }}
+        onDragLeave={() => setDragOver(false)}
+        onDrop={handleDrop}
+        onClick={() => fileInputRef.current?.click()}
+        className={`cursor-pointer border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
+          dragOver ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-blue-400 hover:bg-gray-50'
+        }`}
+      >
+        <div className="flex flex-col items-center gap-2 text-gray-500">
+          <Upload size={32} />
+          <span className="text-sm font-medium">Excel ファイルをドラッグ または クリックして選択</span>
+          <span className="text-xs text-gray-400">.xlsx / .xls / .csv</span>
+        </div>
+        <input
+          type="file"
+          ref={fileInputRef}
+          onChange={e => { const f = e.target.files?.[0]; if (f) parseFile(f); }}
+          accept=".xlsx,.xls,.csv"
+          className="hidden"
+        />
+      </div>
+
+      {parseError && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-600 flex gap-2">
+          <AlertTriangle size={16} className="flex-shrink-0 mt-0.5" />
+          {parseError}
+        </div>
+      )}
+    </div>
   );
 };
 
