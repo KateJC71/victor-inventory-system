@@ -7,51 +7,65 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   * { font-family: 'Noto Sans JP', -apple-system, BlinkMacSystemFont, sans-serif; }
-  body { background: #F5F5F4; color: #1C1917; }
+  body { background: #F5F5F4; color: #0C0A09; }
   .no-scrollbar::-webkit-scrollbar { display: none; }
   .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-  .device-mobile { width: 390px; max-width: 100%; }
-  .device-desktop { width: 100%; max-width: 1280px; }
+  .device-mobile { width: 414px; max-width: 100%; }
   .mock-frame { background: white; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.06), 0 20px 50px rgba(0,0,0,.08); overflow: hidden; }
-  .section-label { font-size: 12px; letter-spacing: .15em; text-transform: uppercase; color: #78716C; font-weight: 500; }
-  .brand-red { color: #CF0A2C; }
+  .section-label { font-size: 13px; letter-spacing: .15em; text-transform: uppercase; color: #57534E; font-weight: 600; }
   .brand-red-bg { background-color: #CF0A2C; }
-  .stock-high { color: #059669; }
-  .stock-low { color: #D97706; }
-  .stock-none { color: #DC2626; }
-  .card-hover { transition: all .15s; }
-  .card-hover:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,.08); }
-  img.placeholder { background: linear-gradient(135deg, #FAFAF9 0%, #F5F5F4 100%); display: flex; align-items: center; justify-content: center; color: #A8A29E; font-weight: 500; }
-  .dot-separator::before { content: "・"; margin: 0 4px; color: #A8A29E; }
+
+  /* Stock pill */
+  .pill { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 999px; font-weight: 700; font-size: 13px; }
+  .pill-green { background: #D1FAE5; color: #065F46; }
+  .pill-orange { background: #FED7AA; color: #9A3412; }
+  .pill-red { background: #FECACA; color: #991B1B; }
+
+  /* Category tags */
+  .tag { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; }
+  .tag-racket { background: #DBEAFE; color: #1E40AF; }  /* ラケット = 青 */
+  .tag-shoes  { background: #D1FAE5; color: #065F46; }  /* シューズ = 綠 */
+  .tag-apparel { background: #EDE9FE; color: #5B21B6; } /* アパレル = 紫 */
+  .tag-bag    { background: #FEF3C7; color: #92400E; }  /* バッグ = 黃 */
+  .tag-grip   { background: #FCE7F3; color: #9D174D; }  /* グリップ = 粉 */
+  .tag-string { background: #FFEDD5; color: #9A3412; }  /* ストリング = 橘 */
+  .tag-shuttle{ background: #CFFAFE; color: #155E75; }  /* シャトル = 青綠 */
+  .tag-other  { background: #F5F5F4; color: #44403C; }
+
+  .card-hover { transition: transform .15s, box-shadow .15s; }
+  .card-hover:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,.1); }
+  img.placeholder { background: linear-gradient(135deg, #FAFAF9 0%, #E7E5E4 100%); display: flex; align-items: center; justify-content: center; color: #78716C; font-weight: 700; font-size: 15px; }
+
+  /* 年長者友善：大字、粗體、寬鬆 */
+  .btn-primary { background-color: #CF0A2C; color: white; font-weight: 700; padding: 12px 20px; border-radius: 10px; font-size: 16px; }
+  .btn-secondary { background: #F5F5F4; color: #292524; font-weight: 600; padding: 12px 20px; border-radius: 10px; font-size: 16px; }
 </style>
 </head>
 <body class="min-h-screen">
 
 <!-- ============================= -->
-<!-- TOP CONTROL BAR -->
+<!-- TOP CONTROL -->
 <!-- ============================= -->
 <div class="sticky top-0 z-50 bg-white border-b border-stone-200 shadow-sm">
-  <div class="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
+  <div class="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between flex-wrap gap-3">
     <div>
-      <div class="text-[10px] tracking-widest text-stone-500 font-medium">VICTOR INVENTORY</div>
-      <div class="text-base font-bold">UI モックアップ</div>
+      <div class="text-[11px] tracking-widest text-stone-500 font-semibold">VICTOR INVENTORY</div>
+      <div class="text-lg font-bold">UI モックアップ v2 — シニア向けに最適化</div>
     </div>
-    <div class="flex gap-1 bg-stone-100 rounded-full p-1 text-xs">
-      <button id="btn-mobile" class="px-4 py-1.5 rounded-full bg-white shadow-sm font-medium">📱 Mobile</button>
-      <button id="btn-desktop" class="px-4 py-1.5 rounded-full text-stone-500 font-medium">💻 Desktop</button>
+    <div class="flex gap-1 bg-stone-100 rounded-full p-1 text-sm">
+      <button id="btn-mobile" class="px-5 py-2 rounded-full bg-white shadow-sm font-semibold">📱 Mobile</button>
+      <button id="btn-desktop" class="px-5 py-2 rounded-full text-stone-500 font-semibold">💻 Desktop</button>
     </div>
   </div>
-  <!-- Jump nav -->
-  <div class="max-w-7xl mx-auto px-6 pb-3 flex gap-4 text-xs text-stone-600 overflow-x-auto no-scrollbar">
-    <a href="#nav" class="hover:text-stone-900 whitespace-nowrap">ナビゲーション</a>
-    <a href="#search" class="hover:text-stone-900 whitespace-nowrap">単品検索</a>
-    <a href="#model" class="hover:text-stone-900 whitespace-nowrap">MODEL</a>
-    <a href="#category" class="hover:text-stone-900 whitespace-nowrap">カテゴリ</a>
-    <a href="#filter" class="hover:text-stone-900 whitespace-nowrap">条件検索</a>
-    <a href="#manage" class="hover:text-stone-900 whitespace-nowrap">管理</a>
+  <div class="max-w-7xl mx-auto px-6 pb-3 flex gap-5 text-sm text-stone-700 overflow-x-auto no-scrollbar font-medium">
+    <a href="#search" class="whitespace-nowrap hover:text-stone-900">単品検索</a>
+    <a href="#model" class="whitespace-nowrap hover:text-stone-900">MODEL</a>
+    <a href="#category" class="whitespace-nowrap hover:text-stone-900">カテゴリ</a>
+    <a href="#filter" class="whitespace-nowrap hover:text-stone-900">条件検索</a>
+    <a href="#manage" class="whitespace-nowrap hover:text-stone-900">管理</a>
   </div>
 </div>
 
@@ -59,96 +73,45 @@
 <!-- DESIGN NOTES -->
 <!-- ============================= -->
 <section class="max-w-7xl mx-auto px-6 py-8">
-  <div class="bg-white border border-stone-200 rounded-xl p-6">
-    <div class="section-label mb-3">DESIGN DIRECTION</div>
-    <h1 class="text-2xl font-bold mb-2">簡約日系 + 購物掃視感</h1>
-    <p class="text-stone-600 text-sm leading-relaxed">
-      MUJI を基調に、商品を素早く確認できる mercari 風のカード設計を組み合わせ。<br/>
-      白基調・細線・余白重視・Victor 赤を CTA のみに使用。
-    </p>
-    <div class="flex gap-3 mt-4 text-xs">
-      <div class="flex items-center gap-1.5"><span class="w-4 h-4 rounded-full bg-white border border-stone-300"></span>白 #FFFFFF</div>
-      <div class="flex items-center gap-1.5"><span class="w-4 h-4 rounded-full" style="background:#F5F5F4"></span>Stone 100</div>
-      <div class="flex items-center gap-1.5"><span class="w-4 h-4 rounded-full" style="background:#78716C"></span>Stone 500</div>
-      <div class="flex items-center gap-1.5"><span class="w-4 h-4 rounded-full" style="background:#1C1917"></span>Stone 900</div>
-      <div class="flex items-center gap-1.5"><span class="w-4 h-4 rounded-full brand-red-bg"></span>Victor 赤</div>
-    </div>
-  </div>
-</section>
-
-<!-- ============================= -->
-<!-- NAVIGATION -->
-<!-- ============================= -->
-<section id="nav" class="max-w-7xl mx-auto px-6 py-8">
-  <div class="section-label mb-4">01 — ナビゲーション</div>
-
-  <!-- MOBILE NAV -->
-  <div class="view-mobile">
-    <div class="device-mobile mx-auto">
-      <div class="mock-frame">
-        <!-- Top bar -->
-        <div class="px-4 py-3 border-b border-stone-200 bg-white">
-          <div class="text-center text-[11px] tracking-widest text-stone-500">VICTOR</div>
-          <div class="text-center text-sm font-bold">在庫検索システム</div>
-        </div>
-        <!-- Placeholder content -->
-        <div class="h-64 bg-stone-50 flex items-center justify-center text-sm text-stone-400">
-          （コンテンツエリア）
-        </div>
-        <!-- Bottom tab bar -->
-        <div class="grid grid-cols-5 border-t border-stone-200 bg-white">
-          <button class="py-3 flex flex-col items-center gap-0.5 text-stone-900">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-            <span class="text-[10px] font-medium">検索</span>
-          </button>
-          <button class="py-3 flex flex-col items-center gap-0.5 text-stone-400">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"/></svg>
-            <span class="text-[10px]">Model</span>
-          </button>
-          <button class="py-3 flex flex-col items-center gap-0.5 text-stone-400">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
-            <span class="text-[10px]">カテゴリ</span>
-          </button>
-          <button class="py-3 flex flex-col items-center gap-0.5 text-stone-400">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/></svg>
-            <span class="text-[10px]">条件</span>
-          </button>
-          <button class="py-3 flex flex-col items-center gap-0.5 text-stone-400">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-            <span class="text-[10px]">管理</span>
-          </button>
-        </div>
+  <div class="bg-white border border-stone-200 rounded-2xl p-6">
+    <div class="section-label mb-3">DESIGN v2 — シニアフレンドリー</div>
+    <h1 class="text-2xl font-bold mb-3">一目で分かる・触れる・読める</h1>
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
+      <div class="bg-stone-50 rounded-xl p-4 border border-stone-100">
+        <div class="text-2xl mb-1">🔍</div>
+        <div class="font-bold text-sm mb-1">大きな文字</div>
+        <p class="text-xs text-stone-600">本文 16px 以上、見出し 20px 以上</p>
       </div>
-      <div class="mt-3 text-center text-xs text-stone-500">📱 下部タブバー（親指で届きやすい）</div>
-    </div>
-  </div>
-
-  <!-- DESKTOP NAV -->
-  <div class="view-desktop hidden">
-    <div class="mock-frame">
-      <div class="flex items-center justify-between px-8 py-4 border-b border-stone-200 bg-white">
-        <div class="flex items-center gap-8">
-          <div>
-            <div class="text-[10px] tracking-widest text-stone-500 font-medium">VICTOR</div>
-            <div class="text-base font-bold">在庫検索システム</div>
-          </div>
-          <div class="flex gap-1 text-sm">
-            <a class="px-4 py-2 rounded-full bg-stone-900 text-white font-medium">検索</a>
-            <a class="px-4 py-2 rounded-full hover:bg-stone-100 text-stone-600">Model</a>
-            <a class="px-4 py-2 rounded-full hover:bg-stone-100 text-stone-600">カテゴリ</a>
-            <a class="px-4 py-2 rounded-full hover:bg-stone-100 text-stone-600">条件</a>
-            <a class="px-4 py-2 rounded-full hover:bg-stone-100 text-stone-600">管理</a>
-            <a class="px-4 py-2 rounded-full hover:bg-stone-100 text-stone-600">更新</a>
-          </div>
-        </div>
-        <div class="flex items-center gap-3 text-xs text-stone-500">
-          <span>📊 Google Sheets</span>
-          <span>・</span>
-          <span>商品数 510</span>
-        </div>
+      <div class="bg-stone-50 rounded-xl p-4 border border-stone-100">
+        <div class="text-2xl mb-1">🟢🟠🔴</div>
+        <div class="font-bold text-sm mb-1">在庫を色で</div>
+        <p class="text-xs text-stone-600">緑=充分、橙=残少、赤=切れ の膠囊表示</p>
+      </div>
+      <div class="bg-stone-50 rounded-xl p-4 border border-stone-100">
+        <div class="text-2xl mb-1">🏷️</div>
+        <div class="font-bold text-sm mb-1">カテゴリ色分け</div>
+        <p class="text-xs text-stone-600">大分類ごとに専用カラー</p>
+      </div>
+      <div class="bg-stone-50 rounded-xl p-4 border border-stone-100">
+        <div class="text-2xl mb-1">👆</div>
+        <div class="font-bold text-sm mb-1">タップしやすい</div>
+        <p class="text-xs text-stone-600">ボタン最低 44px、間隔ゆったり</p>
       </div>
     </div>
-    <div class="mt-3 text-center text-xs text-stone-500">💻 上部固定ナビ（余白広め）</div>
+    <!-- Category color legend -->
+    <div class="mt-5 pt-4 border-t border-stone-100">
+      <div class="text-xs font-semibold text-stone-500 mb-2">カテゴリ別カラーコード</div>
+      <div class="flex flex-wrap gap-2">
+        <span class="tag tag-racket">ラケット</span>
+        <span class="tag tag-shoes">シューズ</span>
+        <span class="tag tag-apparel">アパレル</span>
+        <span class="tag tag-bag">バッグ</span>
+        <span class="tag tag-grip">グリップ</span>
+        <span class="tag tag-string">ストリング</span>
+        <span class="tag tag-shuttle">シャトル</span>
+        <span class="tag tag-other">その他</span>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -156,240 +119,250 @@
 <!-- SEARCH (単品) -->
 <!-- ============================= -->
 <section id="search" class="max-w-7xl mx-auto px-6 py-8">
-  <div class="section-label mb-4">02 — 単品検索 (メイン画面)</div>
+  <div class="section-label mb-4">01 — 単品検索 (メイン画面)</div>
 
-  <!-- MOBILE SEARCH -->
+  <!-- MOBILE -->
   <div class="view-mobile">
     <div class="device-mobile mx-auto">
       <div class="mock-frame">
-        <div class="px-4 py-3 border-b border-stone-100">
-          <div class="text-[11px] tracking-widest text-stone-500 text-center mb-1">VICTOR</div>
-          <div class="text-sm font-bold text-center">在庫検索システム</div>
+        <div class="px-5 py-4 border-b border-stone-100">
+          <div class="text-[11px] tracking-widest text-stone-500 text-center mb-1 font-semibold">VICTOR</div>
+          <div class="text-lg font-bold text-center">在庫検索システム</div>
         </div>
-        <!-- Search bar -->
+        <!-- Search -->
         <div class="p-4">
           <div class="relative">
-            <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-            <input type="text" placeholder="SKU・商品名・モデルで検索" class="w-full pl-11 pr-4 py-3 bg-stone-100 rounded-xl text-sm outline-none focus:ring-2 focus:ring-stone-900" />
+            <svg class="absolute left-5 top-1/2 -translate-y-1/2 w-6 h-6 text-stone-500" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            <input type="text" placeholder="SKU・商品名で検索" class="w-full pl-14 pr-4 py-4 bg-stone-100 rounded-2xl text-base font-medium outline-none focus:ring-2 focus:ring-stone-900" value="ARS" />
           </div>
           <div class="flex gap-2 mt-3 overflow-x-auto no-scrollbar">
-            <button class="px-3 py-1 text-xs bg-stone-900 text-white rounded-full whitespace-nowrap">すべて 24</button>
-            <button class="px-3 py-1 text-xs bg-white border border-stone-200 rounded-full whitespace-nowrap text-stone-600">ラケット 12</button>
-            <button class="px-3 py-1 text-xs bg-white border border-stone-200 rounded-full whitespace-nowrap text-stone-600">シューズ 8</button>
-            <button class="px-3 py-1 text-xs bg-white border border-stone-200 rounded-full whitespace-nowrap text-stone-600">在庫あり</button>
+            <button class="px-4 py-2 text-sm bg-stone-900 text-white rounded-full whitespace-nowrap font-bold">すべて 24</button>
+            <button class="px-4 py-2 text-sm bg-white border-2 border-stone-200 rounded-full whitespace-nowrap font-semibold">ラケット 12</button>
+            <button class="px-4 py-2 text-sm bg-white border-2 border-stone-200 rounded-full whitespace-nowrap font-semibold">シューズ 8</button>
           </div>
         </div>
-        <!-- Result list -->
-        <div class="px-4 pb-4 space-y-2">
-          <div class="flex gap-3 p-3 bg-white border border-stone-200 rounded-xl card-hover">
-            <img class="placeholder w-16 h-16 rounded-lg flex-shrink-0" alt="ARS-100X">ARS</img>
+        <!-- Results -->
+        <div class="px-4 pb-4 space-y-3">
+          <!-- Card: 在庫充分 -->
+          <div class="flex gap-3 p-3 bg-white border-2 border-stone-200 rounded-2xl card-hover">
+            <img class="placeholder w-24 h-24 rounded-xl flex-shrink-0">ARS-100X</img>
             <div class="flex-1 min-w-0">
-              <div class="flex items-start justify-between gap-2">
-                <div class="text-sm font-semibold truncate">ARS-100X-ULTRA3</div>
-                <div class="text-sm font-bold">¥30,000</div>
+              <div class="flex items-center gap-2 mb-1">
+                <span class="tag tag-racket">ラケット</span>
+                <span class="text-xs text-stone-500 font-medium">3U</span>
               </div>
-              <div class="text-xs text-stone-500 mt-0.5">オーラスピード / 3U</div>
-              <div class="flex items-center gap-1.5 mt-1.5">
-                <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
-                <span class="text-xs stock-high font-medium">在庫 15</span>
+              <div class="text-base font-bold truncate">ARS-100X-ULTRA3</div>
+              <div class="text-xs text-stone-500 mt-0.5">オーラスピード</div>
+              <div class="flex items-center justify-between mt-2">
+                <span class="pill pill-green">● 在庫 15点</span>
+                <span class="text-lg font-extrabold">¥30,000</span>
               </div>
             </div>
           </div>
 
-          <div class="flex gap-3 p-3 bg-white border border-stone-200 rounded-xl card-hover">
-            <img class="placeholder w-16 h-16 rounded-lg flex-shrink-0" alt="ARS-3100">ARS</img>
+          <!-- Card: 残少 -->
+          <div class="flex gap-3 p-3 bg-white border-2 border-stone-200 rounded-2xl card-hover">
+            <img class="placeholder w-24 h-24 rounded-xl flex-shrink-0">ARS-3100</img>
             <div class="flex-1 min-w-0">
-              <div class="flex items-start justify-between gap-2">
-                <div class="text-sm font-semibold truncate">ARS-3100A4UG5</div>
-                <div class="text-sm font-bold">¥22,000</div>
+              <div class="flex items-center gap-2 mb-1">
+                <span class="tag tag-racket">ラケット</span>
+                <span class="text-xs text-stone-500 font-medium">4U / A</span>
               </div>
-              <div class="text-xs text-stone-500 mt-0.5">オーラスピード / 4U / A</div>
-              <div class="flex items-center gap-1.5 mt-1.5">
-                <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
-                <span class="text-xs stock-low font-medium">在庫 3</span>
+              <div class="text-base font-bold truncate">ARS-3100A4UG5</div>
+              <div class="text-xs text-stone-500 mt-0.5">オーラスピード</div>
+              <div class="flex items-center justify-between mt-2">
+                <span class="pill pill-orange">⚠ 残り 3点</span>
+                <span class="text-lg font-extrabold">¥22,000</span>
               </div>
             </div>
           </div>
 
-          <div class="flex gap-3 p-3 bg-white border border-stone-200 rounded-xl card-hover">
-            <img class="placeholder w-16 h-16 rounded-lg flex-shrink-0" alt="T-50004TTY">T-5</img>
+          <!-- Card: アパレル -->
+          <div class="flex gap-3 p-3 bg-white border-2 border-stone-200 rounded-2xl card-hover">
+            <img class="placeholder w-24 h-24 rounded-xl flex-shrink-0">T-50004</img>
             <div class="flex-1 min-w-0">
-              <div class="flex items-start justify-between gap-2">
-                <div class="text-sm font-semibold truncate">T-50004TTY-G-M</div>
-                <div class="text-sm font-bold">¥9,500</div>
+              <div class="flex items-center gap-2 mb-1">
+                <span class="tag tag-apparel">アパレル</span>
+                <span class="text-xs text-stone-500 font-medium">G / M</span>
               </div>
-              <div class="text-xs text-stone-500 mt-0.5">アパレル / ゲームシャツ</div>
-              <div class="flex items-center gap-1.5 mt-1.5">
-                <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
-                <span class="text-xs stock-high font-medium">在庫 67</span>
+              <div class="text-base font-bold truncate">T-50004TTY-G-M</div>
+              <div class="text-xs text-stone-500 mt-0.5">ゲームシャツ</div>
+              <div class="flex items-center justify-between mt-2">
+                <span class="pill pill-green">● 在庫 67点</span>
+                <span class="text-lg font-extrabold">¥9,500</span>
               </div>
             </div>
           </div>
 
-          <div class="flex gap-3 p-3 bg-white border border-stone-200 rounded-xl opacity-60">
-            <img class="placeholder w-16 h-16 rounded-lg flex-shrink-0" alt="AC301">AC3</img>
+          <!-- Card: 在庫切れ -->
+          <div class="flex gap-3 p-3 bg-white border-2 border-stone-200 rounded-2xl opacity-80">
+            <img class="placeholder w-24 h-24 rounded-xl flex-shrink-0">AC301</img>
             <div class="flex-1 min-w-0">
-              <div class="flex items-start justify-between gap-2">
-                <div class="text-sm font-semibold truncate">AC301A1</div>
-                <div class="text-sm font-bold">¥800</div>
+              <div class="flex items-center gap-2 mb-1">
+                <span class="tag tag-grip">グリップ</span>
               </div>
-              <div class="text-xs text-stone-500 mt-0.5">グリップ</div>
-              <div class="flex items-center gap-1.5 mt-1.5">
-                <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>
-                <span class="text-xs stock-none font-medium">在庫切れ</span>
+              <div class="text-base font-bold truncate">AC301A1</div>
+              <div class="text-xs text-stone-500 mt-0.5">オーバーグリップ</div>
+              <div class="flex items-center justify-between mt-2">
+                <span class="pill pill-red">✕ 在庫切れ</span>
+                <span class="text-lg font-extrabold text-stone-400 line-through">¥800</span>
               </div>
             </div>
           </div>
+        </div>
+
+        <!-- Bottom nav -->
+        <div class="grid grid-cols-5 border-t-2 border-stone-200 bg-white">
+          <button class="py-3 flex flex-col items-center gap-1 text-stone-900">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            <span class="text-xs font-bold">検索</span>
+          </button>
+          <button class="py-3 flex flex-col items-center gap-1 text-stone-500">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h7"/></svg>
+            <span class="text-xs font-semibold">Model</span>
+          </button>
+          <button class="py-3 flex flex-col items-center gap-1 text-stone-500">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+            <span class="text-xs font-semibold">カテゴリ</span>
+          </button>
+          <button class="py-3 flex flex-col items-center gap-1 text-stone-500">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/></svg>
+            <span class="text-xs font-semibold">条件</span>
+          </button>
+          <button class="py-3 flex flex-col items-center gap-1 text-stone-500">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3" stroke-width="2"/></svg>
+            <span class="text-xs font-semibold">管理</span>
+          </button>
         </div>
       </div>
-      <div class="mt-3 text-center text-xs text-stone-500">商品カード横並び・一目で在庫把握</div>
+      <div class="mt-3 text-center text-xs text-stone-500">大きな画像 ・ 色別タグ ・ 在庫膠囊表示</div>
     </div>
   </div>
 
-  <!-- DESKTOP SEARCH -->
+  <!-- DESKTOP -->
   <div class="view-desktop hidden">
     <div class="mock-frame">
-      <!-- Top -->
-      <div class="px-8 py-4 border-b border-stone-200 flex items-center justify-between">
-        <div class="flex items-center gap-8">
+      <div class="px-8 py-5 border-b-2 border-stone-200 flex items-center justify-between">
+        <div class="flex items-center gap-10">
           <div>
-            <div class="text-[10px] tracking-widest text-stone-500">VICTOR</div>
-            <div class="text-base font-bold">在庫検索システム</div>
+            <div class="text-[11px] tracking-widest text-stone-500 font-semibold">VICTOR</div>
+            <div class="text-xl font-bold">在庫検索システム</div>
           </div>
-          <div class="flex gap-1 text-sm">
-            <a class="px-4 py-2 rounded-full bg-stone-900 text-white">検索</a>
-            <a class="px-4 py-2 rounded-full text-stone-600">Model</a>
-            <a class="px-4 py-2 rounded-full text-stone-600">カテゴリ</a>
-            <a class="px-4 py-2 rounded-full text-stone-600">条件</a>
-            <a class="px-4 py-2 rounded-full text-stone-600">管理</a>
-            <a class="px-4 py-2 rounded-full text-stone-600">更新</a>
+          <div class="flex gap-1 text-base font-semibold">
+            <a class="px-5 py-2.5 rounded-full bg-stone-900 text-white">検索</a>
+            <a class="px-5 py-2.5 rounded-full text-stone-600 hover:bg-stone-100">Model</a>
+            <a class="px-5 py-2.5 rounded-full text-stone-600 hover:bg-stone-100">カテゴリ</a>
+            <a class="px-5 py-2.5 rounded-full text-stone-600 hover:bg-stone-100">条件</a>
+            <a class="px-5 py-2.5 rounded-full text-stone-600 hover:bg-stone-100">管理</a>
+            <a class="px-5 py-2.5 rounded-full text-stone-600 hover:bg-stone-100">更新</a>
           </div>
         </div>
-        <div class="text-xs text-stone-500">📊 Google Sheets ・ 510 items</div>
+        <div class="text-sm text-stone-500 font-medium">📊 商品数 510</div>
       </div>
-
       <div class="flex">
-        <!-- Sidebar filters -->
-        <aside class="w-64 border-r border-stone-200 p-6 text-sm">
+        <aside class="w-72 border-r-2 border-stone-200 p-6 text-base">
           <div class="mb-6">
             <div class="section-label mb-3">カテゴリ</div>
-            <div class="space-y-1">
-              <div class="flex items-center justify-between py-1"><span class="font-medium">すべて</span><span class="text-stone-400 text-xs">24</span></div>
-              <div class="flex items-center justify-between py-1 text-stone-600"><span>ラケット</span><span class="text-stone-400 text-xs">12</span></div>
-              <div class="flex items-center justify-between py-1 text-stone-600"><span>シューズ</span><span class="text-stone-400 text-xs">8</span></div>
-              <div class="flex items-center justify-between py-1 text-stone-600"><span>アパレル</span><span class="text-stone-400 text-xs">4</span></div>
-            </div>
-          </div>
-          <div class="mb-6">
-            <div class="section-label mb-3">価格</div>
-            <input type="range" class="w-full accent-stone-900" min="0" max="50000" value="30000"/>
-            <div class="flex justify-between text-xs text-stone-500 mt-1">
-              <span>¥0</span><span>¥30,000</span>
-            </div>
-          </div>
-          <div class="mb-6">
-            <div class="section-label mb-3">在庫</div>
             <div class="space-y-2">
-              <label class="flex items-center gap-2 text-sm"><input type="checkbox" class="accent-stone-900" checked/> 在庫あり</label>
-              <label class="flex items-center gap-2 text-sm text-stone-500"><input type="checkbox"/> 在庫切れも表示</label>
+              <button class="w-full flex items-center justify-between py-2 px-3 rounded-lg bg-stone-900 text-white"><span class="font-bold">すべて</span><span class="text-sm">24</span></button>
+              <button class="w-full flex items-center justify-between py-2 px-3 rounded-lg hover:bg-stone-50"><span class="flex items-center gap-2"><span class="tag tag-racket">ラケット</span></span><span class="text-sm text-stone-500">12</span></button>
+              <button class="w-full flex items-center justify-between py-2 px-3 rounded-lg hover:bg-stone-50"><span class="flex items-center gap-2"><span class="tag tag-shoes">シューズ</span></span><span class="text-sm text-stone-500">8</span></button>
+              <button class="w-full flex items-center justify-between py-2 px-3 rounded-lg hover:bg-stone-50"><span class="flex items-center gap-2"><span class="tag tag-apparel">アパレル</span></span><span class="text-sm text-stone-500">4</span></button>
+            </div>
+          </div>
+          <div class="mb-6">
+            <div class="section-label mb-3">価格帯</div>
+            <div class="grid grid-cols-2 gap-2 text-sm">
+              <button class="py-2 rounded-lg border-2 border-stone-200 font-semibold">〜¥5,000</button>
+              <button class="py-2 rounded-lg border-2 border-stone-900 bg-stone-900 text-white font-semibold">¥5k-20k</button>
+              <button class="py-2 rounded-lg border-2 border-stone-200 font-semibold">¥20k〜</button>
+            </div>
+          </div>
+          <div>
+            <div class="section-label mb-3">在庫</div>
+            <div class="space-y-3">
+              <label class="flex items-center gap-2.5 text-base font-medium"><input type="checkbox" class="w-5 h-5 accent-stone-900" checked/> <span class="pill pill-green">● あり</span></label>
+              <label class="flex items-center gap-2.5 text-base font-medium"><input type="checkbox" class="w-5 h-5 accent-stone-900" checked/> <span class="pill pill-orange">⚠ 残少</span></label>
+              <label class="flex items-center gap-2.5 text-base font-medium text-stone-500"><input type="checkbox" class="w-5 h-5"/> <span class="pill pill-red">✕ 切れ</span></label>
             </div>
           </div>
         </aside>
 
-        <!-- Results -->
         <main class="flex-1 p-6">
-          <div class="flex items-center gap-3 mb-4">
+          <div class="flex items-center gap-3 mb-5">
             <div class="flex-1 relative">
-              <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-              <input type="text" placeholder="SKU・商品名・モデル名で検索" class="w-full pl-11 pr-4 py-3 bg-stone-100 rounded-xl text-sm outline-none" value="ARS" />
+              <svg class="absolute left-5 top-1/2 -translate-y-1/2 w-6 h-6 text-stone-500" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+              <input type="text" placeholder="SKU・商品名で検索" class="w-full pl-14 pr-4 py-3.5 bg-stone-100 rounded-xl text-lg font-medium outline-none" value="ARS" />
             </div>
-            <div class="text-xs text-stone-500">24 件</div>
-            <select class="text-sm border border-stone-200 rounded-lg px-3 py-2 bg-white">
-              <option>新着順</option>
-              <option>価格 ↓</option>
-              <option>価格 ↑</option>
-              <option>在庫 ↓</option>
-            </select>
+            <div class="text-base text-stone-700 font-semibold whitespace-nowrap">24 件</div>
           </div>
 
-          <div class="grid grid-cols-4 gap-4">
-            <div class="bg-white border border-stone-200 rounded-xl p-3 card-hover">
-              <img class="placeholder w-full aspect-square rounded-lg mb-3">ARS-100X</img>
-              <div class="text-sm font-semibold truncate">ARS-100X-ULTRA3</div>
-              <div class="text-xs text-stone-500 mt-0.5">オーラスピード / 3U</div>
-              <div class="flex items-center justify-between mt-2">
-                <span class="text-base font-bold">¥30,000</span>
-                <span class="text-xs stock-high font-medium">● 15</span>
+          <div class="grid grid-cols-3 gap-5">
+            <div class="bg-white border-2 border-stone-200 rounded-2xl p-4 card-hover">
+              <img class="placeholder w-full aspect-square rounded-xl mb-3">ARS-100X</img>
+              <div class="flex items-center gap-2 mb-2"><span class="tag tag-racket">ラケット</span><span class="text-xs text-stone-500 font-semibold">3U</span></div>
+              <div class="text-base font-bold truncate">ARS-100X-ULTRA3</div>
+              <div class="text-sm text-stone-500">オーラスピード</div>
+              <div class="flex items-center justify-between mt-3">
+                <span class="pill pill-green">● 在庫 15点</span>
+                <span class="text-xl font-extrabold">¥30,000</span>
               </div>
             </div>
-            <div class="bg-white border border-stone-200 rounded-xl p-3 card-hover">
-              <img class="placeholder w-full aspect-square rounded-lg mb-3">ARS-3100</img>
-              <div class="text-sm font-semibold truncate">ARS-3100A4UG5</div>
-              <div class="text-xs text-stone-500 mt-0.5">オーラスピード / 4U / A</div>
-              <div class="flex items-center justify-between mt-2">
-                <span class="text-base font-bold">¥22,000</span>
-                <span class="text-xs stock-low font-medium">● 3</span>
+            <div class="bg-white border-2 border-stone-200 rounded-2xl p-4 card-hover">
+              <img class="placeholder w-full aspect-square rounded-xl mb-3">ARS-3100</img>
+              <div class="flex items-center gap-2 mb-2"><span class="tag tag-racket">ラケット</span><span class="text-xs text-stone-500 font-semibold">4U / A</span></div>
+              <div class="text-base font-bold truncate">ARS-3100A4UG5</div>
+              <div class="text-sm text-stone-500">オーラスピード</div>
+              <div class="flex items-center justify-between mt-3">
+                <span class="pill pill-orange">⚠ 残 3点</span>
+                <span class="text-xl font-extrabold">¥22,000</span>
               </div>
             </div>
-            <div class="bg-white border border-stone-200 rounded-xl p-3 card-hover">
-              <img class="placeholder w-full aspect-square rounded-lg mb-3">ARS-3100</img>
-              <div class="text-sm font-semibold truncate">ARS-3100I4UG5</div>
-              <div class="text-xs text-stone-500 mt-0.5">オーラスピード / 4U / I</div>
-              <div class="flex items-center justify-between mt-2">
-                <span class="text-base font-bold">¥22,000</span>
-                <span class="text-xs stock-high font-medium">● 8</span>
+            <div class="bg-white border-2 border-stone-200 rounded-2xl p-4 card-hover">
+              <img class="placeholder w-full aspect-square rounded-xl mb-3">ARS-3100</img>
+              <div class="flex items-center gap-2 mb-2"><span class="tag tag-racket">ラケット</span><span class="text-xs text-stone-500 font-semibold">4U / I</span></div>
+              <div class="text-base font-bold truncate">ARS-3100I4UG5</div>
+              <div class="text-sm text-stone-500">オーラスピード</div>
+              <div class="flex items-center justify-between mt-3">
+                <span class="pill pill-green">● 在庫 8点</span>
+                <span class="text-xl font-extrabold">¥22,000</span>
               </div>
             </div>
-            <div class="bg-white border border-stone-200 rounded-xl p-3 card-hover opacity-60">
-              <img class="placeholder w-full aspect-square rounded-lg mb-3">ARS-3210</img>
-              <div class="text-sm font-semibold truncate">ARS-3210E4UG5</div>
-              <div class="text-xs text-stone-500 mt-0.5">オーラスピード / 4U / E</div>
-              <div class="flex items-center justify-between mt-2">
-                <span class="text-base font-bold">¥18,000</span>
-                <span class="text-xs stock-none font-medium">● 在庫切れ</span>
+            <div class="bg-white border-2 border-stone-200 rounded-2xl p-4 card-hover">
+              <img class="placeholder w-full aspect-square rounded-xl mb-3">T-50004</img>
+              <div class="flex items-center gap-2 mb-2"><span class="tag tag-apparel">アパレル</span><span class="text-xs text-stone-500 font-semibold">G / M</span></div>
+              <div class="text-base font-bold truncate">T-50004TTY-G-M</div>
+              <div class="text-sm text-stone-500">ゲームシャツ</div>
+              <div class="flex items-center justify-between mt-3">
+                <span class="pill pill-green">● 在庫 67点</span>
+                <span class="text-xl font-extrabold">¥9,500</span>
               </div>
             </div>
-            <div class="bg-white border border-stone-200 rounded-xl p-3 card-hover">
-              <img class="placeholder w-full aspect-square rounded-lg mb-3">T-50004</img>
-              <div class="text-sm font-semibold truncate">T-50004TTY-G-M</div>
-              <div class="text-xs text-stone-500 mt-0.5">アパレル / ゲームシャツ / G / M</div>
-              <div class="flex items-center justify-between mt-2">
-                <span class="text-base font-bold">¥9,500</span>
-                <span class="text-xs stock-high font-medium">● 67</span>
+            <div class="bg-white border-2 border-stone-200 rounded-2xl p-4 card-hover">
+              <img class="placeholder w-full aspect-square rounded-xl mb-3">A970</img>
+              <div class="flex items-center gap-2 mb-2"><span class="tag tag-shoes">シューズ</span><span class="text-xs text-stone-500 font-semibold">23.0cm</span></div>
+              <div class="text-base font-bold truncate">A970NL-A230</div>
+              <div class="text-sm text-stone-500">成人モデル</div>
+              <div class="flex items-center justify-between mt-3">
+                <span class="pill pill-orange">⚠ 残 2点</span>
+                <span class="text-xl font-extrabold">¥14,500</span>
               </div>
             </div>
-            <div class="bg-white border border-stone-200 rounded-xl p-3 card-hover">
-              <img class="placeholder w-full aspect-square rounded-lg mb-3">BR-3800</img>
-              <div class="text-sm font-semibold truncate">BR-3800C</div>
-              <div class="text-xs text-stone-500 mt-0.5">バッグ / ラケットバッグ</div>
-              <div class="flex items-center justify-between mt-2">
-                <span class="text-base font-bold">¥8,800</span>
-                <span class="text-xs stock-high font-medium">● 22</span>
-              </div>
-            </div>
-            <div class="bg-white border border-stone-200 rounded-xl p-3 card-hover">
-              <img class="placeholder w-full aspect-square rounded-lg mb-3">A970</img>
-              <div class="text-sm font-semibold truncate">A970NL-A230</div>
-              <div class="text-xs text-stone-500 mt-0.5">シューズ / 成人 / 23.0cm</div>
-              <div class="flex items-center justify-between mt-2">
-                <span class="text-base font-bold">¥14,500</span>
-                <span class="text-xs stock-low font-medium">● 2</span>
-              </div>
-            </div>
-            <div class="bg-white border border-stone-200 rounded-xl p-3 card-hover">
-              <img class="placeholder w-full aspect-square rounded-lg mb-3">AC301</img>
-              <div class="text-sm font-semibold truncate">AC301A1</div>
-              <div class="text-xs text-stone-500 mt-0.5">グリップ</div>
-              <div class="flex items-center justify-between mt-2">
-                <span class="text-base font-bold">¥800</span>
-                <span class="text-xs stock-high font-medium">● 50</span>
+            <div class="bg-white border-2 border-stone-200 rounded-2xl p-4 card-hover opacity-70">
+              <img class="placeholder w-full aspect-square rounded-xl mb-3">AC301</img>
+              <div class="flex items-center gap-2 mb-2"><span class="tag tag-grip">グリップ</span></div>
+              <div class="text-base font-bold truncate">AC301A1</div>
+              <div class="text-sm text-stone-500">オーバーグリップ</div>
+              <div class="flex items-center justify-between mt-3">
+                <span class="pill pill-red">✕ 在庫切れ</span>
+                <span class="text-xl font-extrabold text-stone-400 line-through">¥800</span>
               </div>
             </div>
           </div>
         </main>
       </div>
     </div>
-    <div class="mt-3 text-center text-xs text-stone-500">💻 サイドバー絞り込み + 4 カラムグリッド</div>
+    <div class="mt-3 text-center text-xs text-stone-500">大きな画像 ・ 色別タグ ・ 在庫膠囊 ・ ゆったりグリッド</div>
   </div>
 </section>
 
@@ -397,252 +370,281 @@
 <!-- MODEL MATRIX -->
 <!-- ============================= -->
 <section id="model" class="max-w-7xl mx-auto px-6 py-8">
-  <div class="section-label mb-4">03 — MODEL マトリクス</div>
+  <div class="section-label mb-4">02 — MODEL マトリクス</div>
 
-  <!-- MOBILE MODEL -->
   <div class="view-mobile">
     <div class="device-mobile mx-auto">
       <div class="mock-frame">
-        <div class="px-4 py-3 border-b border-stone-100 text-sm font-bold text-center">MODEL 別在庫</div>
-        <div class="p-4 space-y-2">
-          <!-- Model row 1 -->
-          <div class="bg-white border border-stone-200 rounded-xl overflow-hidden">
-            <button class="w-full p-3 flex items-center justify-between">
-              <div class="text-left">
-                <div class="text-sm font-semibold">T-50004TTY</div>
-                <div class="text-xs text-stone-500 mt-0.5">アパレル / ゲームシャツ ・ 8 アイテム</div>
+        <div class="px-5 py-4 border-b border-stone-100 text-lg font-bold text-center">MODEL 別在庫</div>
+        <div class="p-4 space-y-3">
+          <div class="bg-white border-2 border-stone-200 rounded-2xl overflow-hidden">
+            <div class="p-4 flex items-center justify-between">
+              <div class="flex-1">
+                <div class="flex items-center gap-2 mb-1"><span class="tag tag-apparel">アパレル</span><span class="text-xs text-stone-500 font-semibold">8 アイテム</span></div>
+                <div class="text-lg font-bold">T-50004TTY</div>
+                <div class="text-sm text-stone-500">ゲームシャツ</div>
               </div>
               <div class="text-right">
-                <div class="text-sm font-bold">¥9,500</div>
-                <div class="text-xs stock-high">在庫計 67</div>
+                <div class="text-xl font-extrabold">¥9,500</div>
+                <span class="pill pill-green mt-1">● 計 67点</span>
               </div>
-            </button>
-            <!-- Expanded matrix -->
-            <div class="border-t border-stone-100 bg-stone-50 p-3">
-              <div class="flex gap-2 mb-2">
-                <img class="placeholder w-10 h-10 rounded">G</img>
-                <img class="placeholder w-10 h-10 rounded">J</img>
+            </div>
+            <div class="border-t-2 border-stone-100 bg-stone-50 p-4">
+              <div class="flex gap-3 mb-3">
+                <div class="text-center"><img class="placeholder w-14 h-14 rounded-lg mb-1">G</img><div class="text-xs font-bold">G</div></div>
+                <div class="text-center"><img class="placeholder w-14 h-14 rounded-lg mb-1">J</img><div class="text-xs font-bold">J</div></div>
               </div>
-              <table class="w-full text-xs">
+              <table class="w-full text-sm">
                 <thead>
-                  <tr class="text-stone-500">
-                    <th class="text-left font-medium py-1">Size</th>
-                    <th class="text-center font-medium">G</th>
-                    <th class="text-center font-medium">J</th>
+                  <tr class="text-stone-500 border-b-2 border-stone-200">
+                    <th class="text-left font-bold py-2">Size</th>
+                    <th class="text-center font-bold">G</th>
+                    <th class="text-center font-bold">J</th>
                   </tr>
                 </thead>
-                <tbody class="font-medium">
-                  <tr class="border-t border-stone-200"><td class="py-2">M</td><td class="text-center stock-high">6</td><td class="text-center stock-high">3</td></tr>
-                  <tr class="border-t border-stone-200"><td class="py-2">L</td><td class="text-center stock-high">11</td><td class="text-center stock-high">8</td></tr>
-                  <tr class="border-t border-stone-200"><td class="py-2">XL</td><td class="text-center stock-high">10</td><td class="text-center stock-high">13</td></tr>
-                  <tr class="border-t border-stone-200"><td class="py-2">XXL</td><td class="text-center stock-high">9</td><td class="text-center stock-high">7</td></tr>
+                <tbody class="font-bold">
+                  <tr class="border-b border-stone-100"><td class="py-3">M</td><td class="text-center"><span class="pill pill-green text-xs">6</span></td><td class="text-center"><span class="pill pill-orange text-xs">3</span></td></tr>
+                  <tr class="border-b border-stone-100"><td class="py-3">L</td><td class="text-center"><span class="pill pill-green text-xs">11</span></td><td class="text-center"><span class="pill pill-green text-xs">8</span></td></tr>
+                  <tr class="border-b border-stone-100"><td class="py-3">XL</td><td class="text-center"><span class="pill pill-green text-xs">10</span></td><td class="text-center"><span class="pill pill-green text-xs">13</span></td></tr>
+                  <tr><td class="py-3">XXL</td><td class="text-center"><span class="pill pill-green text-xs">9</span></td><td class="text-center"><span class="pill pill-green text-xs">7</span></td></tr>
                 </tbody>
               </table>
             </div>
           </div>
-          <div class="bg-white border border-stone-200 rounded-xl p-3 flex items-center justify-between">
-            <div>
-              <div class="text-sm font-semibold">ARS-3100</div>
-              <div class="text-xs text-stone-500 mt-0.5">オーラスピード ・ 4 アイテム</div>
+          <div class="bg-white border-2 border-stone-200 rounded-2xl p-4 flex items-center justify-between">
+            <div class="flex-1">
+              <div class="flex items-center gap-2 mb-1"><span class="tag tag-racket">ラケット</span><span class="text-xs text-stone-500 font-semibold">4 アイテム</span></div>
+              <div class="text-lg font-bold">ARS-3100</div>
+              <div class="text-sm text-stone-500">オーラスピード</div>
             </div>
             <div class="text-right">
-              <div class="text-sm font-bold">¥22,000</div>
-              <div class="text-xs stock-high">在庫計 25</div>
+              <div class="text-xl font-extrabold">¥22,000</div>
+              <span class="pill pill-green mt-1">● 計 23点</span>
             </div>
           </div>
-          <div class="bg-white border border-stone-200 rounded-xl p-3 flex items-center justify-between">
-            <div>
-              <div class="text-sm font-semibold">A970NL</div>
-              <div class="text-xs text-stone-500 mt-0.5">シューズ / 成人 ・ 12 サイズ</div>
+          <div class="bg-white border-2 border-stone-200 rounded-2xl p-4 flex items-center justify-between">
+            <div class="flex-1">
+              <div class="flex items-center gap-2 mb-1"><span class="tag tag-shoes">シューズ</span><span class="text-xs text-stone-500 font-semibold">12 サイズ</span></div>
+              <div class="text-lg font-bold">A970NL</div>
+              <div class="text-sm text-stone-500">成人モデル</div>
             </div>
             <div class="text-right">
-              <div class="text-sm font-bold">¥14,500</div>
-              <div class="text-xs stock-low">在庫計 8</div>
+              <div class="text-xl font-extrabold">¥14,500</div>
+              <span class="pill pill-orange mt-1">⚠ 計 8点</span>
             </div>
           </div>
         </div>
       </div>
-      <div class="mt-3 text-center text-xs text-stone-500">Model カード ・ タップで色×サイズ展開</div>
+      <div class="mt-3 text-center text-xs text-stone-500">マトリクスの数字も在庫色で即判</div>
     </div>
   </div>
 
-  <!-- DESKTOP MODEL -->
   <div class="view-desktop hidden">
     <div class="mock-frame">
-      <div class="px-8 py-4 border-b border-stone-200 flex items-center justify-between">
-        <div class="text-base font-bold">MODEL 別在庫</div>
-        <input type="text" placeholder="モデル名で絞り込み" class="px-4 py-2 bg-stone-100 rounded-lg text-sm w-64" />
+      <div class="px-8 py-5 border-b-2 border-stone-200 flex items-center justify-between">
+        <div class="text-xl font-bold">MODEL 別在庫</div>
+        <input type="text" placeholder="モデル名で絞り込み" class="px-5 py-2.5 bg-stone-100 rounded-xl text-base w-80 font-medium" />
       </div>
-      <div class="p-6 grid grid-cols-2 gap-4">
-        <!-- Model card with matrix -->
-        <div class="bg-white border border-stone-200 rounded-xl p-4">
-          <div class="flex items-start justify-between mb-3">
+      <div class="p-6 grid grid-cols-2 gap-5">
+        <div class="bg-white border-2 border-stone-200 rounded-2xl p-5">
+          <div class="flex items-start justify-between mb-4">
             <div>
-              <div class="text-base font-bold">T-50004TTY</div>
-              <div class="text-xs text-stone-500 mt-0.5">アパレル / ゲームシャツ</div>
+              <div class="flex items-center gap-2 mb-2"><span class="tag tag-apparel">アパレル</span></div>
+              <div class="text-xl font-bold">T-50004TTY</div>
+              <div class="text-sm text-stone-500">ゲームシャツ</div>
             </div>
             <div class="text-right">
-              <div class="text-lg font-bold">¥9,500</div>
-              <div class="text-xs stock-high">在庫計 67</div>
+              <div class="text-2xl font-extrabold">¥9,500</div>
+              <span class="pill pill-green mt-2">● 計 67点</span>
             </div>
           </div>
-          <div class="flex gap-3 mb-3">
-            <div class="text-center">
-              <img class="placeholder w-14 h-14 rounded mb-1">G</img>
-              <div class="text-[10px] text-stone-600 font-medium">G</div>
-            </div>
-            <div class="text-center">
-              <img class="placeholder w-14 h-14 rounded mb-1">J</img>
-              <div class="text-[10px] text-stone-600 font-medium">J</div>
-            </div>
+          <div class="flex gap-3 mb-4">
+            <div class="text-center"><img class="placeholder w-16 h-16 rounded-lg mb-1">G</img><div class="text-xs font-bold">G</div></div>
+            <div class="text-center"><img class="placeholder w-16 h-16 rounded-lg mb-1">J</img><div class="text-xs font-bold">J</div></div>
           </div>
-          <table class="w-full text-xs">
+          <table class="w-full text-sm">
             <thead>
-              <tr class="text-stone-500 border-b border-stone-200">
-                <th class="text-left font-medium py-1.5">Size</th>
-                <th class="text-center font-medium">G</th>
-                <th class="text-center font-medium">J</th>
-                <th class="text-right font-medium">計</th>
+              <tr class="text-stone-500 border-b-2 border-stone-200">
+                <th class="text-left font-bold py-2">Size</th>
+                <th class="text-center font-bold">G</th>
+                <th class="text-center font-bold">J</th>
+                <th class="text-right font-bold">計</th>
               </tr>
             </thead>
-            <tbody class="font-medium">
-              <tr class="border-b border-stone-100"><td class="py-2">M</td><td class="text-center">6</td><td class="text-center">3</td><td class="text-right text-stone-500">9</td></tr>
-              <tr class="border-b border-stone-100"><td class="py-2">L</td><td class="text-center">11</td><td class="text-center">8</td><td class="text-right text-stone-500">19</td></tr>
-              <tr class="border-b border-stone-100"><td class="py-2">XL</td><td class="text-center">10</td><td class="text-center">13</td><td class="text-right text-stone-500">23</td></tr>
-              <tr><td class="py-2">XXL</td><td class="text-center">9</td><td class="text-center">7</td><td class="text-right text-stone-500">16</td></tr>
+            <tbody class="font-bold">
+              <tr class="border-b border-stone-100"><td class="py-3">M</td><td class="text-center"><span class="pill pill-green text-xs">6</span></td><td class="text-center"><span class="pill pill-orange text-xs">3</span></td><td class="text-right text-stone-600">9</td></tr>
+              <tr class="border-b border-stone-100"><td class="py-3">L</td><td class="text-center"><span class="pill pill-green text-xs">11</span></td><td class="text-center"><span class="pill pill-green text-xs">8</span></td><td class="text-right text-stone-600">19</td></tr>
+              <tr class="border-b border-stone-100"><td class="py-3">XL</td><td class="text-center"><span class="pill pill-green text-xs">10</span></td><td class="text-center"><span class="pill pill-green text-xs">13</span></td><td class="text-right text-stone-600">23</td></tr>
+              <tr><td class="py-3">XXL</td><td class="text-center"><span class="pill pill-green text-xs">9</span></td><td class="text-center"><span class="pill pill-green text-xs">7</span></td><td class="text-right text-stone-600">16</td></tr>
             </tbody>
           </table>
         </div>
-        <!-- Simpler model card -->
-        <div class="bg-white border border-stone-200 rounded-xl p-4">
-          <div class="flex items-start justify-between mb-3">
+        <div class="bg-white border-2 border-stone-200 rounded-2xl p-5">
+          <div class="flex items-start justify-between mb-4">
             <div>
-              <div class="text-base font-bold">ARS-3100</div>
-              <div class="text-xs text-stone-500 mt-0.5">ラケット / オーラスピード</div>
+              <div class="flex items-center gap-2 mb-2"><span class="tag tag-racket">ラケット</span></div>
+              <div class="text-xl font-bold">ARS-3100</div>
+              <div class="text-sm text-stone-500">オーラスピード</div>
             </div>
             <div class="text-right">
-              <div class="text-lg font-bold">¥22,000</div>
-              <div class="text-xs stock-high">在庫計 25</div>
+              <div class="text-2xl font-extrabold">¥22,000</div>
+              <span class="pill pill-green mt-2">● 計 23点</span>
             </div>
           </div>
-          <div class="flex gap-3 mb-3">
-            <div class="text-center"><img class="placeholder w-14 h-14 rounded mb-1">A</img><div class="text-[10px] font-medium">A</div></div>
-            <div class="text-center"><img class="placeholder w-14 h-14 rounded mb-1">I</img><div class="text-[10px] font-medium">I</div></div>
-            <div class="text-center"><img class="placeholder w-14 h-14 rounded mb-1">M</img><div class="text-[10px] font-medium">M</div></div>
-            <div class="text-center"><img class="placeholder w-14 h-14 rounded mb-1">R</img><div class="text-[10px] font-medium">R</div></div>
+          <div class="flex gap-3 mb-4">
+            <div class="text-center"><img class="placeholder w-16 h-16 rounded-lg mb-1">A</img><div class="text-xs font-bold">A</div></div>
+            <div class="text-center"><img class="placeholder w-16 h-16 rounded-lg mb-1">I</img><div class="text-xs font-bold">I</div></div>
+            <div class="text-center"><img class="placeholder w-16 h-16 rounded-lg mb-1">M</img><div class="text-xs font-bold">M</div></div>
+            <div class="text-center"><img class="placeholder w-16 h-16 rounded-lg mb-1">R</img><div class="text-xs font-bold">R</div></div>
           </div>
-          <table class="w-full text-xs">
+          <table class="w-full text-sm">
             <thead>
-              <tr class="text-stone-500 border-b border-stone-200">
-                <th class="text-left font-medium py-1.5">重量</th>
-                <th class="text-center font-medium">A</th>
-                <th class="text-center font-medium">I</th>
-                <th class="text-center font-medium">M</th>
-                <th class="text-center font-medium">R</th>
+              <tr class="text-stone-500 border-b-2 border-stone-200">
+                <th class="text-left font-bold py-2">重量</th>
+                <th class="text-center font-bold">A</th>
+                <th class="text-center font-bold">I</th>
+                <th class="text-center font-bold">M</th>
+                <th class="text-center font-bold">R</th>
               </tr>
             </thead>
-            <tbody class="font-medium">
-              <tr class="border-b border-stone-100"><td class="py-2">4U</td><td class="text-center">6</td><td class="text-center">8</td><td class="text-center">5</td><td class="text-center">4</td></tr>
-              <tr><td class="py-2">3U</td><td class="text-center">—</td><td class="text-center">2</td><td class="text-center">—</td><td class="text-center">—</td></tr>
+            <tbody class="font-bold">
+              <tr class="border-b border-stone-100"><td class="py-3">4U</td><td class="text-center"><span class="pill pill-green text-xs">6</span></td><td class="text-center"><span class="pill pill-green text-xs">8</span></td><td class="text-center"><span class="pill pill-green text-xs">5</span></td><td class="text-center"><span class="pill pill-orange text-xs">2</span></td></tr>
+              <tr><td class="py-3">3U</td><td class="text-center text-stone-300">—</td><td class="text-center"><span class="pill pill-orange text-xs">2</span></td><td class="text-center text-stone-300">—</td><td class="text-center text-stone-300">—</td></tr>
             </tbody>
           </table>
         </div>
       </div>
     </div>
-    <div class="mt-3 text-center text-xs text-stone-500">2 カラム ・ 色サムネイル + マトリクス</div>
+    <div class="mt-3 text-center text-xs text-stone-500">マトリクス内の数字も在庫色で即判定</div>
   </div>
 </section>
 
 <!-- ============================= -->
-<!-- CATEGORY (簡化版) -->
+<!-- CATEGORY -->
 <!-- ============================= -->
 <section id="category" class="max-w-7xl mx-auto px-6 py-8">
-  <div class="section-label mb-4">04 — カテゴリ (簡化版)</div>
+  <div class="section-label mb-4">03 — カテゴリ (簡化版)</div>
 
   <div class="view-mobile">
     <div class="device-mobile mx-auto">
       <div class="mock-frame">
-        <div class="px-4 py-3 border-b border-stone-100 flex items-center gap-2 text-sm">
-          <button class="text-stone-500">←</button>
-          <span class="font-medium">ラケット</span>
-          <span class="text-stone-400 text-xs">/</span>
-          <span class="text-stone-500 text-xs">オーラスピード</span>
+        <div class="px-5 py-4 border-b border-stone-100">
+          <div class="text-base font-bold mb-2">カテゴリを選ぶ</div>
+          <div class="flex items-center gap-2 text-sm text-stone-500">
+            <button class="text-stone-700 font-bold">ラケット</button>
+            <span>›</span>
+            <span>オーラスピード</span>
+          </div>
         </div>
-        <div class="p-4 space-y-2">
-          <a class="block p-4 bg-white border border-stone-200 rounded-xl card-hover">
+        <div class="p-4 space-y-3">
+          <a class="block p-4 bg-white border-2 border-stone-200 rounded-2xl card-hover">
             <div class="flex items-center justify-between">
-              <div class="text-sm font-semibold">ARS-100X</div>
-              <div class="text-xs text-stone-400">1 items ›</div>
+              <div class="flex items-center gap-3">
+                <img class="placeholder w-14 h-14 rounded-xl">ARS</img>
+                <div>
+                  <div class="text-base font-bold">ARS-100X</div>
+                  <div class="text-xs text-stone-500">1 アイテム</div>
+                </div>
+              </div>
+              <svg class="w-6 h-6 text-stone-400" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" d="M9 5l7 7-7 7"/></svg>
             </div>
           </a>
-          <a class="block p-4 bg-white border border-stone-200 rounded-xl card-hover">
+          <a class="block p-4 bg-white border-2 border-stone-200 rounded-2xl card-hover">
             <div class="flex items-center justify-between">
-              <div class="text-sm font-semibold">ARS-100X-ULTRA</div>
-              <div class="text-xs text-stone-400">2 items ›</div>
+              <div class="flex items-center gap-3">
+                <img class="placeholder w-14 h-14 rounded-xl">ARS</img>
+                <div>
+                  <div class="text-base font-bold">ARS-100X-ULTRA</div>
+                  <div class="text-xs text-stone-500">2 アイテム</div>
+                </div>
+              </div>
+              <svg class="w-6 h-6 text-stone-400" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" d="M9 5l7 7-7 7"/></svg>
             </div>
           </a>
-          <a class="block p-4 bg-white border border-stone-200 rounded-xl card-hover">
+          <a class="block p-4 bg-white border-2 border-stone-200 rounded-2xl card-hover">
             <div class="flex items-center justify-between">
-              <div class="text-sm font-semibold">ARS-3100</div>
-              <div class="text-xs text-stone-400">4 items ›</div>
+              <div class="flex items-center gap-3">
+                <img class="placeholder w-14 h-14 rounded-xl">ARS</img>
+                <div>
+                  <div class="text-base font-bold">ARS-3100</div>
+                  <div class="text-xs text-stone-500">4 アイテム</div>
+                </div>
+              </div>
+              <svg class="w-6 h-6 text-stone-400" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" d="M9 5l7 7-7 7"/></svg>
             </div>
           </a>
         </div>
       </div>
-      <div class="mt-3 text-center text-xs text-stone-500">パンくず + シンプルリスト</div>
+      <div class="mt-3 text-center text-xs text-stone-500">大きなタップエリア ・ サムネイル付き</div>
     </div>
   </div>
 
   <div class="view-desktop hidden">
     <div class="mock-frame">
-      <div class="px-8 py-4 border-b border-stone-200 flex items-center gap-3 text-sm">
-        <a class="text-stone-500 hover:text-stone-900">ラケット</a>
+      <div class="px-8 py-4 border-b-2 border-stone-200 flex items-center gap-3 text-base">
+        <a class="text-stone-600 hover:text-stone-900 font-semibold">ラケット</a>
         <span class="text-stone-300">›</span>
-        <a class="text-stone-500 hover:text-stone-900">オーラスピード</a>
+        <a class="text-stone-600 hover:text-stone-900 font-semibold">オーラスピード</a>
         <span class="text-stone-300">›</span>
-        <span class="font-medium">ARS-3100</span>
+        <span class="font-bold">ARS-3100</span>
       </div>
       <div class="flex">
-        <aside class="w-72 border-r border-stone-200 p-6 text-sm space-y-1">
-          <a class="block py-1.5 text-stone-900 font-medium">ラケット</a>
-          <a class="block pl-4 py-1 text-stone-600">オーラスピード ▸</a>
-          <a class="block pl-8 py-1 text-stone-400">ARS-100X</a>
-          <a class="block pl-8 py-1 text-stone-900 font-medium">ARS-3100 (4)</a>
-          <a class="block pl-4 py-1 text-stone-600">スラスター</a>
-          <a class="block py-1.5 text-stone-600">シューズ</a>
-          <a class="block py-1.5 text-stone-600">アパレル</a>
+        <aside class="w-80 border-r-2 border-stone-200 p-6 text-base space-y-1">
+          <div class="py-2 px-3 rounded-lg bg-stone-100 font-bold flex items-center gap-2"><span class="tag tag-racket">ラケット</span></div>
+          <a class="block pl-4 py-2 px-3 rounded hover:bg-stone-50 text-stone-700 font-medium">オーラスピード ▾</a>
+          <a class="block pl-8 py-1.5 text-stone-500 text-sm">ARS-100X</a>
+          <a class="block pl-8 py-1.5 text-stone-900 font-bold text-sm">ARS-3100 (4)</a>
+          <a class="block pl-4 py-2 px-3 rounded hover:bg-stone-50 text-stone-700 font-medium">スラスター</a>
+          <div class="py-2 px-3 rounded-lg hover:bg-stone-50 flex items-center gap-2"><span class="tag tag-shoes">シューズ</span></div>
+          <div class="py-2 px-3 rounded-lg hover:bg-stone-50 flex items-center gap-2"><span class="tag tag-apparel">アパレル</span></div>
         </aside>
         <main class="flex-1 p-8">
           <div class="grid grid-cols-4 gap-4">
-            <div class="bg-white border border-stone-200 rounded-xl p-3">
-              <img class="placeholder aspect-square rounded mb-2">A</img>
-              <div class="text-sm font-semibold">ARS-3100A4UG5</div>
-              <div class="text-xs text-stone-500">4U / A</div>
-              <div class="text-sm font-bold mt-1">¥22,000 <span class="text-xs stock-high font-normal ml-1">● 6</span></div>
+            <div class="bg-white border-2 border-stone-200 rounded-2xl p-4 card-hover">
+              <img class="placeholder aspect-square rounded-xl mb-3">A</img>
+              <div class="flex items-center gap-1.5 mb-1.5"><span class="tag tag-racket">ラケット</span></div>
+              <div class="text-base font-bold">ARS-3100A4UG5</div>
+              <div class="text-sm text-stone-500">4U / A</div>
+              <div class="flex items-center justify-between mt-2.5">
+                <span class="pill pill-green">● 6点</span>
+                <span class="text-lg font-extrabold">¥22,000</span>
+              </div>
             </div>
-            <div class="bg-white border border-stone-200 rounded-xl p-3">
-              <img class="placeholder aspect-square rounded mb-2">I</img>
-              <div class="text-sm font-semibold">ARS-3100I4UG5</div>
-              <div class="text-xs text-stone-500">4U / I</div>
-              <div class="text-sm font-bold mt-1">¥22,000 <span class="text-xs stock-high font-normal ml-1">● 8</span></div>
+            <div class="bg-white border-2 border-stone-200 rounded-2xl p-4 card-hover">
+              <img class="placeholder aspect-square rounded-xl mb-3">I</img>
+              <div class="flex items-center gap-1.5 mb-1.5"><span class="tag tag-racket">ラケット</span></div>
+              <div class="text-base font-bold">ARS-3100I4UG5</div>
+              <div class="text-sm text-stone-500">4U / I</div>
+              <div class="flex items-center justify-between mt-2.5">
+                <span class="pill pill-green">● 8点</span>
+                <span class="text-lg font-extrabold">¥22,000</span>
+              </div>
             </div>
-            <div class="bg-white border border-stone-200 rounded-xl p-3">
-              <img class="placeholder aspect-square rounded mb-2">M</img>
-              <div class="text-sm font-semibold">ARS-3100M4UG5</div>
-              <div class="text-xs text-stone-500">4U / M</div>
-              <div class="text-sm font-bold mt-1">¥22,000 <span class="text-xs stock-high font-normal ml-1">● 5</span></div>
+            <div class="bg-white border-2 border-stone-200 rounded-2xl p-4 card-hover">
+              <img class="placeholder aspect-square rounded-xl mb-3">M</img>
+              <div class="flex items-center gap-1.5 mb-1.5"><span class="tag tag-racket">ラケット</span></div>
+              <div class="text-base font-bold">ARS-3100M4UG5</div>
+              <div class="text-sm text-stone-500">4U / M</div>
+              <div class="flex items-center justify-between mt-2.5">
+                <span class="pill pill-green">● 5点</span>
+                <span class="text-lg font-extrabold">¥22,000</span>
+              </div>
             </div>
-            <div class="bg-white border border-stone-200 rounded-xl p-3">
-              <img class="placeholder aspect-square rounded mb-2">R</img>
-              <div class="text-sm font-semibold">ARS-3100R4UG5</div>
-              <div class="text-xs text-stone-500">4U / R</div>
-              <div class="text-sm font-bold mt-1">¥22,000 <span class="text-xs stock-high font-normal ml-1">● 4</span></div>
+            <div class="bg-white border-2 border-stone-200 rounded-2xl p-4 card-hover">
+              <img class="placeholder aspect-square rounded-xl mb-3">R</img>
+              <div class="flex items-center gap-1.5 mb-1.5"><span class="tag tag-racket">ラケット</span></div>
+              <div class="text-base font-bold">ARS-3100R4UG5</div>
+              <div class="text-sm text-stone-500">4U / R</div>
+              <div class="flex items-center justify-between mt-2.5">
+                <span class="pill pill-orange">⚠ 2点</span>
+                <span class="text-lg font-extrabold">¥22,000</span>
+              </div>
             </div>
           </div>
         </main>
       </div>
     </div>
-    <div class="mt-3 text-center text-xs text-stone-500">左ツリー + 右グリッド (パンくずで戻りやすい)</div>
+    <div class="mt-3 text-center text-xs text-stone-500">左ツリー + 右グリッド ・ カテゴリ色で迷子防止</div>
   </div>
 </section>
 
@@ -650,54 +652,54 @@
 <!-- FILTER -->
 <!-- ============================= -->
 <section id="filter" class="max-w-7xl mx-auto px-6 py-8">
-  <div class="section-label mb-4">05 — 条件検索</div>
+  <div class="section-label mb-4">04 — 条件検索</div>
 
   <div class="view-mobile">
     <div class="device-mobile mx-auto">
       <div class="mock-frame">
-        <div class="px-4 py-3 border-b border-stone-100 text-sm font-bold text-center">条件で絞り込み</div>
-        <div class="p-4 space-y-4">
+        <div class="px-5 py-4 border-b border-stone-100 text-lg font-bold text-center">条件で絞り込み</div>
+        <div class="p-4 space-y-5">
           <div>
-            <div class="text-xs text-stone-500 mb-2">価格帯</div>
-            <div class="grid grid-cols-2 gap-2 text-xs">
-              <button class="py-2 rounded-lg border border-stone-900 bg-stone-900 text-white">〜¥5,000</button>
-              <button class="py-2 rounded-lg border border-stone-200 text-stone-700">¥5,000-10,000</button>
-              <button class="py-2 rounded-lg border border-stone-200 text-stone-700">¥10,000-20,000</button>
-              <button class="py-2 rounded-lg border border-stone-200 text-stone-700">¥20,000〜</button>
+            <div class="text-sm font-bold text-stone-700 mb-2">💴 価格帯</div>
+            <div class="grid grid-cols-2 gap-2">
+              <button class="py-3 rounded-xl border-2 border-stone-900 bg-stone-900 text-white text-sm font-bold">〜¥5,000</button>
+              <button class="py-3 rounded-xl border-2 border-stone-200 text-stone-700 text-sm font-semibold">¥5k-10k</button>
+              <button class="py-3 rounded-xl border-2 border-stone-200 text-stone-700 text-sm font-semibold">¥10k-20k</button>
+              <button class="py-3 rounded-xl border-2 border-stone-200 text-stone-700 text-sm font-semibold">¥20k〜</button>
             </div>
           </div>
           <div>
-            <div class="text-xs text-stone-500 mb-2">カテゴリ</div>
-            <div class="flex flex-wrap gap-1.5">
-              <button class="px-3 py-1.5 text-xs rounded-full bg-stone-900 text-white">すべて</button>
-              <button class="px-3 py-1.5 text-xs rounded-full border border-stone-200 text-stone-600">ラケット</button>
-              <button class="px-3 py-1.5 text-xs rounded-full border border-stone-200 text-stone-600">シューズ</button>
-              <button class="px-3 py-1.5 text-xs rounded-full border border-stone-200 text-stone-600">アパレル</button>
-              <button class="px-3 py-1.5 text-xs rounded-full border border-stone-200 text-stone-600">バッグ</button>
+            <div class="text-sm font-bold text-stone-700 mb-2">🏷️ カテゴリ</div>
+            <div class="flex flex-wrap gap-2">
+              <button class="px-3 py-2 rounded-lg bg-stone-900 text-white text-sm font-bold">すべて</button>
+              <button class="px-3 py-2 rounded-lg text-sm font-bold tag tag-racket">ラケット</button>
+              <button class="px-3 py-2 rounded-lg text-sm font-bold tag tag-shoes">シューズ</button>
+              <button class="px-3 py-2 rounded-lg text-sm font-bold tag tag-apparel">アパレル</button>
+              <button class="px-3 py-2 rounded-lg text-sm font-bold tag tag-grip">グリップ</button>
             </div>
           </div>
-          <div class="pt-2 border-t border-stone-100">
-            <div class="text-xs text-stone-500 mb-2">結果 48 件</div>
-            <div class="space-y-2">
-              <div class="flex gap-3 p-3 bg-white border border-stone-200 rounded-xl">
-                <img class="placeholder w-14 h-14 rounded flex-shrink-0">AC3</img>
+          <div class="pt-3 border-t-2 border-stone-100">
+            <div class="text-sm font-bold text-stone-700 mb-3">結果 48 件</div>
+            <div class="space-y-3">
+              <div class="flex gap-3 p-3 bg-white border-2 border-stone-200 rounded-2xl">
+                <img class="placeholder w-20 h-20 rounded-xl flex-shrink-0">AC3</img>
                 <div class="flex-1 min-w-0">
-                  <div class="text-sm font-semibold truncate">AC301A1</div>
-                  <div class="text-xs text-stone-500">グリップ</div>
-                  <div class="flex items-center justify-between mt-1">
-                    <span class="text-sm font-bold">¥800</span>
-                    <span class="text-xs stock-high">● 50</span>
+                  <div class="flex items-center gap-1.5 mb-1"><span class="tag tag-grip">グリップ</span></div>
+                  <div class="text-base font-bold">AC301A1</div>
+                  <div class="flex items-center justify-between mt-2">
+                    <span class="pill pill-green">● 50点</span>
+                    <span class="text-base font-extrabold">¥800</span>
                   </div>
                 </div>
               </div>
-              <div class="flex gap-3 p-3 bg-white border border-stone-200 rounded-xl">
-                <img class="placeholder w-14 h-14 rounded flex-shrink-0">ST</img>
+              <div class="flex gap-3 p-3 bg-white border-2 border-stone-200 rounded-2xl">
+                <img class="placeholder w-20 h-20 rounded-xl flex-shrink-0">VBS</img>
                 <div class="flex-1 min-w-0">
-                  <div class="text-sm font-semibold truncate">VBS-69N-W</div>
-                  <div class="text-xs text-stone-500">ストリング</div>
-                  <div class="flex items-center justify-between mt-1">
-                    <span class="text-sm font-bold">¥3,200</span>
-                    <span class="text-xs stock-high">● 120</span>
+                  <div class="flex items-center gap-1.5 mb-1"><span class="tag tag-string">ストリング</span></div>
+                  <div class="text-base font-bold">VBS-69N-W</div>
+                  <div class="flex items-center justify-between mt-2">
+                    <span class="pill pill-green">● 120点</span>
+                    <span class="text-base font-extrabold">¥3,200</span>
                   </div>
                 </div>
               </div>
@@ -705,54 +707,84 @@
           </div>
         </div>
       </div>
-      <div class="mt-3 text-center text-xs text-stone-500">価格帯ボタン ・ カテゴリチップ</div>
+      <div class="mt-3 text-center text-xs text-stone-500">大ボタン ・ 一目で分かる分類色</div>
     </div>
   </div>
 
   <div class="view-desktop hidden">
     <div class="mock-frame">
-      <div class="px-8 py-4 border-b border-stone-200 text-base font-bold">条件検索</div>
+      <div class="px-8 py-5 border-b-2 border-stone-200 text-xl font-bold">条件で絞り込み</div>
       <div class="p-8">
         <div class="grid grid-cols-3 gap-6 mb-6">
           <div>
-            <div class="text-xs font-medium text-stone-500 mb-3">価格帯</div>
-            <div class="grid grid-cols-2 gap-2 text-sm">
-              <button class="py-2 rounded-lg bg-stone-900 text-white">〜¥5,000</button>
-              <button class="py-2 rounded-lg border border-stone-200">¥5,000-10,000</button>
-              <button class="py-2 rounded-lg border border-stone-200">¥10,000-20,000</button>
-              <button class="py-2 rounded-lg border border-stone-200">¥20,000〜</button>
+            <div class="text-sm font-bold text-stone-700 mb-3">💴 価格帯</div>
+            <div class="grid grid-cols-2 gap-2">
+              <button class="py-3 rounded-xl bg-stone-900 text-white font-bold">〜¥5,000</button>
+              <button class="py-3 rounded-xl border-2 border-stone-200 font-semibold">¥5k-10k</button>
+              <button class="py-3 rounded-xl border-2 border-stone-200 font-semibold">¥10k-20k</button>
+              <button class="py-3 rounded-xl border-2 border-stone-200 font-semibold">¥20k〜</button>
             </div>
           </div>
           <div>
-            <div class="text-xs font-medium text-stone-500 mb-3">カテゴリ</div>
+            <div class="text-sm font-bold text-stone-700 mb-3">🏷️ カテゴリ</div>
             <div class="flex flex-wrap gap-2">
-              <button class="px-3 py-1.5 text-sm rounded-full bg-stone-900 text-white">すべて</button>
-              <button class="px-3 py-1.5 text-sm rounded-full border border-stone-200">ラケット</button>
-              <button class="px-3 py-1.5 text-sm rounded-full border border-stone-200">シューズ</button>
-              <button class="px-3 py-1.5 text-sm rounded-full border border-stone-200">アパレル</button>
+              <button class="px-3 py-2 rounded-lg bg-stone-900 text-white font-bold">すべて</button>
+              <button class="px-3 py-2 rounded-lg font-bold tag tag-racket">ラケット</button>
+              <button class="px-3 py-2 rounded-lg font-bold tag tag-shoes">シューズ</button>
+              <button class="px-3 py-2 rounded-lg font-bold tag tag-apparel">アパレル</button>
             </div>
           </div>
           <div>
-            <div class="text-xs font-medium text-stone-500 mb-3">在庫状況</div>
-            <div class="space-y-2 text-sm">
-              <label class="flex items-center gap-2"><input type="checkbox" checked class="accent-stone-900"/> 在庫あり</label>
-              <label class="flex items-center gap-2 text-stone-500"><input type="checkbox"/> 在庫切れも含む</label>
+            <div class="text-sm font-bold text-stone-700 mb-3">📦 在庫状況</div>
+            <div class="space-y-3">
+              <label class="flex items-center gap-3 font-semibold"><input type="checkbox" class="w-5 h-5 accent-stone-900" checked/> <span class="pill pill-green">● 在庫あり</span></label>
+              <label class="flex items-center gap-3 font-semibold"><input type="checkbox" class="w-5 h-5 accent-stone-900" checked/> <span class="pill pill-orange">⚠ 残少</span></label>
+              <label class="flex items-center gap-3 font-semibold text-stone-500"><input type="checkbox" class="w-5 h-5"/> <span class="pill pill-red">✕ 在庫切れ</span></label>
             </div>
           </div>
         </div>
-        <div class="flex items-center justify-between mb-4">
-          <div class="text-sm text-stone-500">結果 48 件</div>
-          <select class="text-sm border border-stone-200 rounded-lg px-3 py-2 bg-white"><option>価格 ↑</option></select>
-        </div>
+        <div class="text-sm font-bold text-stone-700 mb-4">結果 48 件</div>
         <div class="grid grid-cols-4 gap-4">
-          <div class="bg-white border border-stone-200 rounded-xl p-3"><img class="placeholder aspect-square rounded mb-2">AC</img><div class="text-sm font-semibold">AC301A1</div><div class="text-xs text-stone-500">グリップ</div><div class="text-sm font-bold mt-1">¥800</div></div>
-          <div class="bg-white border border-stone-200 rounded-xl p-3"><img class="placeholder aspect-square rounded mb-2">VB</img><div class="text-sm font-semibold">VBS-69N-W</div><div class="text-xs text-stone-500">ストリング</div><div class="text-sm font-bold mt-1">¥3,200</div></div>
-          <div class="bg-white border border-stone-200 rounded-xl p-3"><img class="placeholder aspect-square rounded mb-2">T5</img><div class="text-sm font-semibold">T-50004TTY</div><div class="text-xs text-stone-500">ゲームシャツ</div><div class="text-sm font-bold mt-1">¥9,500</div></div>
-          <div class="bg-white border border-stone-200 rounded-xl p-3"><img class="placeholder aspect-square rounded mb-2">A9</img><div class="text-sm font-semibold">A970NL-A230</div><div class="text-xs text-stone-500">シューズ</div><div class="text-sm font-bold mt-1">¥14,500</div></div>
+          <div class="bg-white border-2 border-stone-200 rounded-2xl p-4 card-hover">
+            <img class="placeholder aspect-square rounded-xl mb-3">AC</img>
+            <div class="flex items-center gap-1.5 mb-1.5"><span class="tag tag-grip">グリップ</span></div>
+            <div class="text-base font-bold">AC301A1</div>
+            <div class="flex items-center justify-between mt-2.5">
+              <span class="pill pill-green">● 50点</span>
+              <span class="text-lg font-extrabold">¥800</span>
+            </div>
+          </div>
+          <div class="bg-white border-2 border-stone-200 rounded-2xl p-4 card-hover">
+            <img class="placeholder aspect-square rounded-xl mb-3">VB</img>
+            <div class="flex items-center gap-1.5 mb-1.5"><span class="tag tag-string">ストリング</span></div>
+            <div class="text-base font-bold">VBS-69N-W</div>
+            <div class="flex items-center justify-between mt-2.5">
+              <span class="pill pill-green">● 120点</span>
+              <span class="text-lg font-extrabold">¥3,200</span>
+            </div>
+          </div>
+          <div class="bg-white border-2 border-stone-200 rounded-2xl p-4 card-hover">
+            <img class="placeholder aspect-square rounded-xl mb-3">T5</img>
+            <div class="flex items-center gap-1.5 mb-1.5"><span class="tag tag-apparel">アパレル</span></div>
+            <div class="text-base font-bold">T-50004TTY</div>
+            <div class="flex items-center justify-between mt-2.5">
+              <span class="pill pill-green">● 67点</span>
+              <span class="text-lg font-extrabold">¥9,500</span>
+            </div>
+          </div>
+          <div class="bg-white border-2 border-stone-200 rounded-2xl p-4 card-hover">
+            <img class="placeholder aspect-square rounded-xl mb-3">A9</img>
+            <div class="flex items-center gap-1.5 mb-1.5"><span class="tag tag-shoes">シューズ</span></div>
+            <div class="text-base font-bold">A970NL-A230</div>
+            <div class="flex items-center justify-between mt-2.5">
+              <span class="pill pill-orange">⚠ 2点</span>
+              <span class="text-lg font-extrabold">¥14,500</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
-    <div class="mt-3 text-center text-xs text-stone-500">フィルター上 + 結果下 (集中しやすい)</div>
+    <div class="mt-3 text-center text-xs text-stone-500">フィルター上 + 結果下 ・ カテゴリ色分け</div>
   </div>
 </section>
 
@@ -760,121 +792,114 @@
 <!-- MANAGE -->
 <!-- ============================= -->
 <section id="manage" class="max-w-7xl mx-auto px-6 py-8 pb-20">
-  <div class="section-label mb-4">06 — 管理 (商品登録)</div>
+  <div class="section-label mb-4">05 — 管理 (商品登録)</div>
 
   <div class="view-mobile">
     <div class="device-mobile mx-auto">
       <div class="mock-frame">
-        <div class="px-4 py-3 border-b border-stone-100 text-sm font-bold text-center">商品登録</div>
+        <div class="px-5 py-4 border-b border-stone-100 text-lg font-bold text-center">商品登録</div>
         <div class="p-4">
-          <div class="flex gap-1 bg-stone-100 p-1 rounded-lg mb-4 text-xs">
-            <button class="flex-1 py-1.5 bg-white rounded font-medium">商品登録</button>
-            <button class="flex-1 py-1.5 text-stone-500">一括登録</button>
-            <button class="flex-1 py-1.5 text-stone-500">カテゴリ</button>
+          <div class="flex gap-1 bg-stone-100 p-1 rounded-xl mb-4 text-sm">
+            <button class="flex-1 py-2.5 bg-white rounded-lg font-bold shadow-sm">単品</button>
+            <button class="flex-1 py-2.5 text-stone-500 font-semibold">一括</button>
+            <button class="flex-1 py-2.5 text-stone-500 font-semibold">カテゴリ</button>
           </div>
-          <div class="space-y-3">
-            <div class="grid grid-cols-2 gap-2">
-              <div>
-                <label class="block text-[10px] font-semibold text-stone-500 mb-1">SKU *</label>
-                <input class="w-full px-2 py-2 border border-stone-200 rounded text-xs" value="ARS-3100A4UG5"/>
-              </div>
-              <div>
-                <label class="block text-[10px] font-semibold text-stone-500 mb-1">Model *</label>
-                <input class="w-full px-2 py-2 border border-stone-200 rounded text-xs" value="ARS-3100"/>
-              </div>
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-bold text-stone-700 mb-1.5">SKU *</label>
+              <input class="w-full px-4 py-3 border-2 border-stone-200 rounded-xl text-base font-medium" value="ARS-3100A4UG5"/>
             </div>
-            <div class="bg-blue-50 border border-blue-100 rounded-lg p-2 text-[10px] text-blue-700">
-              ✨ 既存の型番を検出 → 自動入力しました
+            <div>
+              <label class="block text-sm font-bold text-stone-700 mb-1.5">Model Name *</label>
+              <input class="w-full px-4 py-3 border-2 border-stone-200 rounded-xl text-base font-medium" value="ARS-3100"/>
             </div>
-            <div class="grid grid-cols-2 gap-2">
+            <div class="bg-blue-50 border-2 border-blue-200 rounded-xl p-3 text-sm text-blue-900 font-semibold flex gap-2">
+              <span>✨</span><span>既存の型番を検出 → 自動入力しました</span>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
               <div>
-                <label class="block text-[10px] font-semibold text-stone-500 mb-1">大分類</label>
-                <select class="w-full px-2 py-2 border border-stone-200 rounded text-xs"><option>ラケット</option></select>
+                <label class="block text-sm font-bold text-stone-700 mb-1.5">大分類</label>
+                <select class="w-full px-4 py-3 border-2 border-stone-200 rounded-xl text-base font-medium bg-white"><option>ラケット</option></select>
               </div>
               <div>
-                <label class="block text-[10px] font-semibold text-stone-500 mb-1">小分類</label>
-                <select class="w-full px-2 py-2 border border-stone-200 rounded text-xs"><option>オーラスピード</option></select>
+                <label class="block text-sm font-bold text-stone-700 mb-1.5">小分類</label>
+                <select class="w-full px-4 py-3 border-2 border-stone-200 rounded-xl text-base font-medium bg-white"><option>オーラスピード</option></select>
               </div>
             </div>
             <div>
-              <label class="block text-[10px] font-semibold text-stone-500 mb-1">画像</label>
-              <div class="border-2 border-dashed border-stone-200 rounded-lg p-6 text-center text-xs text-stone-400">
-                📷 ドラッグ または クリック
+              <label class="block text-sm font-bold text-stone-700 mb-1.5">画像</label>
+              <div class="border-2 border-dashed border-stone-300 rounded-2xl p-8 text-center text-stone-500 font-semibold">
+                📷<br/><span class="text-sm">ドラッグ または タップ</span>
               </div>
             </div>
-            <button class="w-full brand-red-bg text-white py-3 rounded-lg text-sm font-bold mt-4">保存</button>
+            <button class="btn-primary w-full mt-4 text-base py-4">💾 商品を保存</button>
           </div>
         </div>
       </div>
-      <div class="mt-3 text-center text-xs text-stone-500">3 タブ + 赤 CTA ボタン</div>
+      <div class="mt-3 text-center text-xs text-stone-500">大きな入力 ・ 太字ラベル ・ 赤い大ボタン</div>
     </div>
   </div>
 
   <div class="view-desktop hidden">
     <div class="mock-frame">
-      <div class="px-8 py-4 border-b border-stone-200 text-base font-bold">商品登録</div>
+      <div class="px-8 py-5 border-b-2 border-stone-200 text-xl font-bold">商品登録</div>
       <div class="p-8 max-w-3xl">
         <div class="flex justify-center mb-6">
-          <div class="flex gap-1 bg-stone-100 p-1 rounded-lg text-sm">
-            <button class="px-5 py-2 bg-white rounded-md font-medium shadow-sm">商品登録</button>
-            <button class="px-5 py-2 text-stone-500">一括登録</button>
-            <button class="px-5 py-2 text-stone-500">カテゴリ構造</button>
+          <div class="flex gap-1 bg-stone-100 p-1 rounded-xl text-base">
+            <button class="px-6 py-2.5 bg-white rounded-lg font-bold shadow-sm">単品</button>
+            <button class="px-6 py-2.5 text-stone-500 font-semibold">一括</button>
+            <button class="px-6 py-2.5 text-stone-500 font-semibold">カテゴリ構造</button>
           </div>
         </div>
-        <div class="bg-white border border-stone-200 rounded-xl p-6 space-y-4">
+        <div class="bg-white border-2 border-stone-200 rounded-2xl p-6 space-y-5">
           <div class="grid grid-cols-2 gap-4">
             <div>
-              <label class="block text-xs font-semibold text-stone-500 mb-1">SKU *</label>
-              <input class="w-full px-3 py-2 border border-stone-200 rounded text-sm" value="ARS-3100A4UG5"/>
+              <label class="block text-sm font-bold text-stone-700 mb-1.5">SKU *</label>
+              <input class="w-full px-4 py-3 border-2 border-stone-200 rounded-xl text-base font-medium" value="ARS-3100A4UG5"/>
             </div>
             <div>
-              <label class="block text-xs font-semibold text-stone-500 mb-1">Model Name *</label>
-              <input class="w-full px-3 py-2 border border-stone-200 rounded text-sm" value="ARS-3100"/>
+              <label class="block text-sm font-bold text-stone-700 mb-1.5">Model Name *</label>
+              <input class="w-full px-4 py-3 border-2 border-stone-200 rounded-xl text-base font-medium" value="ARS-3100"/>
             </div>
           </div>
-          <div class="bg-blue-50 border border-blue-100 rounded-lg p-3 text-xs text-blue-700 flex items-center gap-2">
-            ✨ 既存の型番「ARS-3100」を検出 → 分類・性別・価格を自動入力しました
+          <div class="bg-blue-50 border-2 border-blue-200 rounded-xl p-3.5 text-base text-blue-900 font-semibold flex gap-2">
+            <span>✨</span><span>既存の型番「ARS-3100」を検出 → 分類・性別・価格を自動入力しました</span>
           </div>
           <div class="grid grid-cols-2 gap-4">
-            <div><label class="block text-xs font-semibold text-stone-500 mb-1">大分類</label><select class="w-full px-3 py-2 border border-stone-200 rounded text-sm bg-white"><option>ラケット</option></select></div>
-            <div><label class="block text-xs font-semibold text-stone-500 mb-1">小分類</label><select class="w-full px-3 py-2 border border-stone-200 rounded text-sm bg-white"><option>オーラスピード</option></select></div>
-          </div>
-          <div class="grid grid-cols-2 gap-4">
-            <div><label class="block text-xs font-semibold text-stone-500 mb-1">性別</label><select class="w-full px-3 py-2 border border-stone-200 rounded text-sm bg-white"><option>ユニ</option></select></div>
-            <div><label class="block text-xs font-semibold text-stone-500 mb-1">カラー</label><input class="w-full px-3 py-2 border border-stone-200 rounded text-sm" value="A"/></div>
+            <div><label class="block text-sm font-bold text-stone-700 mb-1.5">大分類</label><select class="w-full px-4 py-3 border-2 border-stone-200 rounded-xl text-base font-medium bg-white"><option>ラケット</option></select></div>
+            <div><label class="block text-sm font-bold text-stone-700 mb-1.5">小分類</label><select class="w-full px-4 py-3 border-2 border-stone-200 rounded-xl text-base font-medium bg-white"><option>オーラスピード</option></select></div>
           </div>
           <div class="grid grid-cols-3 gap-4">
-            <div><label class="block text-xs font-semibold text-stone-500 mb-1">サイズ</label><input class="w-full px-3 py-2 border border-stone-200 rounded text-sm" value="4U"/></div>
-            <div><label class="block text-xs font-semibold text-stone-500 mb-1">価格</label><input class="w-full px-3 py-2 border border-stone-200 rounded text-sm" value="22000"/></div>
-            <div><label class="block text-xs font-semibold text-stone-500 mb-1">在庫</label><input class="w-full px-3 py-2 border border-stone-200 rounded text-sm" value="0"/></div>
+            <div><label class="block text-sm font-bold text-stone-700 mb-1.5">カラー</label><input class="w-full px-4 py-3 border-2 border-stone-200 rounded-xl text-base font-medium" value="A"/></div>
+            <div><label class="block text-sm font-bold text-stone-700 mb-1.5">サイズ</label><input class="w-full px-4 py-3 border-2 border-stone-200 rounded-xl text-base font-medium" value="4U"/></div>
+            <div><label class="block text-sm font-bold text-stone-700 mb-1.5">価格</label><input class="w-full px-4 py-3 border-2 border-stone-200 rounded-xl text-base font-medium" value="22000"/></div>
           </div>
           <div>
-            <label class="block text-xs font-semibold text-stone-500 mb-1">商品画像</label>
-            <div class="border-2 border-dashed border-stone-200 hover:border-stone-400 rounded-lg p-10 text-center text-sm text-stone-400">
-              📷 画像をドラッグ または クリックして選択<br/>
-              <span class="text-xs">JPG / PNG / WebP</span>
+            <label class="block text-sm font-bold text-stone-700 mb-1.5">商品画像</label>
+            <div class="border-2 border-dashed border-stone-300 hover:border-stone-500 rounded-2xl p-10 text-center text-stone-500 font-semibold">
+              📷 画像をドラッグ または クリック<br/>
+              <span class="text-sm text-stone-400">JPG / PNG / WebP</span>
             </div>
           </div>
           <div class="flex justify-end gap-3 pt-2">
-            <button class="px-6 py-2 text-stone-700 bg-stone-100 rounded-lg text-sm">キャンセル</button>
-            <button class="px-8 py-2 brand-red-bg text-white rounded-lg text-sm font-bold">商品を保存</button>
+            <button class="btn-secondary">キャンセル</button>
+            <button class="btn-primary">💾 商品を保存</button>
           </div>
         </div>
       </div>
     </div>
-    <div class="mt-3 text-center text-xs text-stone-500">中央フォーム ・ 広めの入力欄</div>
+    <div class="mt-3 text-center text-xs text-stone-500">大ラベル ・ 太枠入力 ・ 目立つ保存ボタン</div>
   </div>
 </section>
 
-<!-- Bottom comment area -->
-<section class="max-w-7xl mx-auto px-6 py-16 text-center border-t border-stone-200">
-  <h3 class="text-lg font-bold mb-2">気に入った？</h3>
-  <p class="text-sm text-stone-500 mb-6">Claude に「○○を変えて」とフィードバックするだけ</p>
-  <div class="inline-flex gap-3 text-xs">
-    <span class="px-3 py-1.5 bg-stone-100 rounded-full">色を変えたい</span>
-    <span class="px-3 py-1.5 bg-stone-100 rounded-full">カード大きく</span>
-    <span class="px-3 py-1.5 bg-stone-100 rounded-full">文字大きく</span>
-    <span class="px-3 py-1.5 bg-stone-100 rounded-full">この画面気に入った</span>
+<!-- Footer -->
+<section class="max-w-7xl mx-auto px-6 py-12 text-center border-t-2 border-stone-200">
+  <p class="text-sm text-stone-600 mb-4">気に入ったところ、変えたいところ、なんでも Claude に言ってください</p>
+  <div class="inline-flex flex-wrap gap-2 justify-center text-sm">
+    <span class="px-4 py-2 bg-white border border-stone-200 rounded-full font-medium">在庫色 OK</span>
+    <span class="px-4 py-2 bg-white border border-stone-200 rounded-full font-medium">もっと大きく</span>
+    <span class="px-4 py-2 bg-white border border-stone-200 rounded-full font-medium">色を変えたい</span>
+    <span class="px-4 py-2 bg-white border border-stone-200 rounded-full font-medium">この画面で決定</span>
   </div>
 </section>
 
