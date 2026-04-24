@@ -53,8 +53,9 @@ export async function fetchProductsFromSheets(): Promise<Product[]> {
 
       return {
         sku: pm.sku,
-        name: pm.masterName || pm.sku,
+        name: inventory?.productName || pm.masterName || pm.sku,
         modelName: pm.modelName || '',
+        masterName: pm.masterName || '',
         category: mapCategory(pm.category),
         subCategory: pm.subCategory || '',
         color: pm.color || pm.colorCode || '',

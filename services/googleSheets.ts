@@ -190,6 +190,37 @@ export async function writeFullProduct(
 }
 
 /**
+ * 上傳圖片到 Cloudinary（使用 unsigned upload preset）
+ * 需要先在 Vercel 設定 VITE_CLOUDINARY_UPLOAD_PRESET 環境變數
+ */
+export async function uploadImageToCloudinary(file: File): Promise<string> {
+  const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
+  const preset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
+
+  if (!cloudName || !preset) {
+    throw new Error('Cloudinary が設定されていません（Cloud Name または Upload Preset 不足）');
+  }
+
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('upload_preset', preset);
+  formData.append('folder', 'victor-inventory');
+
+  const response = await fetch(
+    `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
+    { method: 'POST', body: formData }
+  );
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`画像アップロードに失敗: ${errorText.substring(0, 150)}`);
+  }
+
+  const data = await response.json();
+  return data.secure_url;
+}
+
+/**
  * 將 Google Drive 圖片連結轉換為可用的圖片 URL
  */
 export function convertGoogleDriveUrl(url: string): string {

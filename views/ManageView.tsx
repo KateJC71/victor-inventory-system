@@ -1,7 +1,104 @@
-import React, { useState, useMemo, useEffect } from 'react';
-import { Product, CategoryType, CATEGORIES, CATEGORY_HIERARCHY } from '../types';
-import { PackagePlus, FolderTree, Save, ChevronDown, ChevronRight, Edit2, Check, X, Lock, Plus, Trash2, Loader2, Sparkles } from 'lucide-react';
-import { writeFullProduct } from '../services/googleSheets';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
+import { Product, CategoryType, CATEGORIES, CATEGORY_HIERARCHY, GENDERS } from '../types';
+import { PackagePlus, FolderTree, Save, ChevronDown, ChevronRight, Edit2, Check, X, Lock, Plus, Trash2, Loader2, Sparkles, Upload, Image as ImageIcon } from 'lucide-react';
+import { writeFullProduct, uploadImageToCloudinary } from '../services/googleSheets';
+
+// --- Sub Component: Image Upload Field ---
+const ImageUploadField: React.FC<{ value: string; onChange: (url: string) => void }> = ({ value, onChange }) => {
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [dragOver, setDragOver] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFile = async (file: File) => {
+    if (!file.type.startsWith('image/')) {
+      setUploadError('画像ファイルを選択してください');
+      return;
+    }
+    setUploadError(null);
+    setUploading(true);
+    try {
+      const url = await uploadImageToCloudinary(file);
+      onChange(url);
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : 'アップロード失敗');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(false);
+    const file = e.dataTransfer.files[0];
+    if (file) handleFile(file);
+  };
+
+  return (
+    <div>
+      <label className="block text-xs font-bold text-gray-500 mb-1">商品画像 (任意)</label>
+
+      {value ? (
+        <div className="relative">
+          <img src={value} alt="preview" className="w-full max-w-xs rounded border border-gray-200" />
+          <button
+            type="button"
+            onClick={() => onChange('')}
+            className="absolute top-2 right-2 bg-white/90 hover:bg-red-500 hover:text-white text-red-600 p-1.5 rounded-full shadow border border-red-200"
+            title="画像を削除"
+          >
+            <X size={16} />
+          </button>
+        </div>
+      ) : (
+        <div
+          onDragOver={e => { e.preventDefault(); setDragOver(true); }}
+          onDragLeave={() => setDragOver(false)}
+          onDrop={handleDrop}
+          onClick={() => fileInputRef.current?.click()}
+          className={`cursor-pointer border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
+            dragOver ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-blue-400 hover:bg-gray-50'
+          }`}
+        >
+          {uploading ? (
+            <div className="flex flex-col items-center gap-2 text-blue-600">
+              <Loader2 size={24} className="animate-spin" />
+              <span className="text-sm">アップロード中...</span>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center gap-2 text-gray-500">
+              <Upload size={24} />
+              <span className="text-sm font-medium">画像をドラッグ または クリックして選択</span>
+              <span className="text-xs text-gray-400">JPG / PNG / GIF / WebP</span>
+            </div>
+          )}
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={e => { const f = e.target.files?.[0]; if (f) handleFile(f); }}
+            accept="image/*"
+            className="hidden"
+          />
+        </div>
+      )}
+
+      {uploadError && (
+        <p className="mt-2 text-xs text-red-600">❌ {uploadError}</p>
+      )}
+
+      <p className="mt-2 text-xs text-gray-400">
+        または URL を直接入力：
+      </p>
+      <input
+        type="text"
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        className="mt-1 w-full p-2 border border-gray-200 rounded text-xs text-gray-600"
+        placeholder="https://..."
+      />
+    </div>
+  );
+};
 
 // 管理畫面密碼
 const ADMIN_PASSWORD = 'Victor2025';
@@ -134,11 +231,13 @@ const AddProductForm: React.FC<{ products: Product[], onAdd: (p: Product) => voi
     }
     const match = modelIndex.get(model);
     if (match) {
-      setAutofillHint(`既存の型番「${match.modelName}」を検出 → 分類と価格を自動入力`);
+      setAutofillHint(`既存の型番「${match.modelName}」を検出 → 分類・マスター名・性別・価格を自動入力`);
       setFormData(prev => ({
         ...prev,
         category: match.category,
         subCategory: prev.subCategory || match.subCategory || '',
+        masterName: prev.masterName || match.masterName || '',
+        gender: prev.gender || match.gender || '',
         price: prev.price && Number(prev.price) > 0 ? prev.price : match.price,
       }));
     } else {
@@ -185,10 +284,12 @@ const AddProductForm: React.FC<{ products: Product[], onAdd: (p: Product) => voi
       sku: formData.sku,
       name: formData.name,
       modelName: formData.modelName,
+      masterName: formData.masterName || '',
       category: formData.category as CategoryType,
       subCategory: formData.subCategory || '',
       color: formData.color || '',
       size: formData.size || '',
+      gender: formData.gender || '',
       price: Number(formData.price) || 0,
       stock: Number(formData.stock) || 0,
       imageUrl: formData.imageUrl || '',
@@ -201,10 +302,12 @@ const AddProductForm: React.FC<{ products: Product[], onAdd: (p: Product) => voi
         modelName: newProduct.modelName,
         name: newProduct.name,
         category: newProduct.category,
+        masterName: formData.masterName || '',
         subCategory: newProduct.subCategory,
         color: newProduct.color,
         colorCode: newProduct.color,
         size: newProduct.size,
+        gender: formData.gender || '',
         price: newProduct.price,
         stock: newProduct.stock,
         imageUrl: newProduct.imageUrl,
@@ -213,7 +316,7 @@ const AddProductForm: React.FC<{ products: Product[], onAdd: (p: Product) => voi
       // Sheet 寫入成功 → 更新本地 state
       onAdd(newProduct);
       alert('商品を登録しました ✅');
-      // Reset critical fields but keep context
+      // Reset critical fields but keep context（masterName/gender/category 保留方便連續新增）
       setFormData(prev => ({ ...prev, sku: '', name: '', color: '', size: '', stock: 0, imageUrl: '' }));
       setAutofillHint(null);
     } catch (err) {
@@ -260,16 +363,28 @@ const AddProductForm: React.FC<{ products: Product[], onAdd: (p: Product) => voi
         </div>
       </div>
 
-      <div>
-        <label className="block text-xs font-bold text-gray-500 mb-1">商品名 (必須)</label>
-        <input
-          type="text"
-          value={formData.name || ''}
-          onChange={e => handleChange('name', e.target.value)}
-          className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none"
-          placeholder="Junior Racket Red"
-          required
-        />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label className="block text-xs font-bold text-gray-500 mb-1">マスター名 / 系列 (任意)</label>
+          <input
+            type="text"
+            value={formData.masterName || ''}
+            onChange={e => handleChange('masterName' as any, e.target.value)}
+            className="w-full p-2 border border-gray-300 rounded outline-none"
+            placeholder="オーラスピード / ARS-100X-ULTRA 等"
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-bold text-gray-500 mb-1">商品名 (必須)</label>
+          <input
+            type="text"
+            value={formData.name || ''}
+            onChange={e => handleChange('name', e.target.value)}
+            className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none"
+            placeholder="Junior Racket Red"
+            required
+          />
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -286,26 +401,45 @@ const AddProductForm: React.FC<{ products: Product[], onAdd: (p: Product) => voi
           </select>
         </div>
         <div>
-          <label className="block text-xs font-bold text-gray-500 mb-1">小分類 (選択または入力)</label>
-          <div className="relative">
-             <input
-              type="text"
-              list="subcategories-list"
-              value={formData.subCategory || ''}
-              onChange={e => handleChange('subCategory', e.target.value)}
-              className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none"
-              placeholder="リストから選択..."
-            />
-            <datalist id="subcategories-list">
-              {existingSubCategories.map(sub => (
-                <option key={sub} value={sub} />
-              ))}
-            </datalist>
-          </div>
+          <label className="block text-xs font-bold text-gray-500 mb-1">小分類</label>
+          <select
+            value={formData.subCategory || ''}
+            onChange={e => {
+              if (e.target.value === '__custom__') {
+                const input = prompt('新しい小分類名を入力');
+                if (input && input.trim()) handleChange('subCategory', input.trim());
+              } else {
+                handleChange('subCategory', e.target.value);
+              }
+            }}
+            className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none bg-white"
+          >
+            <option value="">選択してください</option>
+            {existingSubCategories.map(sub => (
+              <option key={sub} value={sub}>{sub}</option>
+            ))}
+            {formData.subCategory && !existingSubCategories.includes(formData.subCategory) && (
+              <option value={formData.subCategory}>{formData.subCategory}（新規）</option>
+            )}
+            <option value="__custom__">＋ その他（新規入力）</option>
+          </select>
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="block text-xs font-bold text-gray-500 mb-1">性別 (任意)</label>
+          <select
+            value={formData.gender || ''}
+            onChange={e => handleChange('gender', e.target.value)}
+            className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none bg-white"
+          >
+            <option value="">指定なし</option>
+            {GENDERS.map(g => (
+              <option key={g} value={g}>{g}</option>
+            ))}
+          </select>
+        </div>
         <div>
           <label className="block text-xs font-bold text-gray-500 mb-1">カラー</label>
           <input
@@ -313,20 +447,21 @@ const AddProductForm: React.FC<{ products: Product[], onAdd: (p: Product) => voi
             value={formData.color || ''}
             onChange={e => handleChange('color', e.target.value)}
             className="w-full p-2 border border-gray-300 rounded outline-none"
+            placeholder="A / I / M / R 等"
           />
         </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
         <div>
-           <label className="block text-xs font-bold text-gray-500 mb-1">サイズ</label>
-           <input
+          <label className="block text-xs font-bold text-gray-500 mb-1">サイズ</label>
+          <input
             type="text"
             value={formData.size || ''}
             onChange={e => handleChange('size', e.target.value)}
             className="w-full p-2 border border-gray-300 rounded outline-none"
           />
         </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block text-xs font-bold text-gray-500 mb-1">価格 (税込)</label>
           <input
@@ -336,27 +471,22 @@ const AddProductForm: React.FC<{ products: Product[], onAdd: (p: Product) => voi
             className="w-full p-2 border border-gray-300 rounded outline-none"
           />
         </div>
-        <div>
-           <label className="block text-xs font-bold text-gray-500 mb-1">在庫数</label>
-           <input
-            type="number"
-            value={formData.stock || 0}
-            onChange={e => handleChange('stock', e.target.value)}
-            className="w-full p-2 border border-gray-300 rounded outline-none"
-          />
-        </div>
       </div>
 
       <div>
-        <label className="block text-xs font-bold text-gray-500 mb-1">画像URL (任意)</label>
+        <label className="block text-xs font-bold text-gray-500 mb-1">在庫数</label>
         <input
-          type="text"
-          value={formData.imageUrl || ''}
-          onChange={e => handleChange('imageUrl', e.target.value)}
-          className="w-full p-2 border border-gray-300 rounded outline-none text-sm text-gray-600"
-          placeholder="https://..."
+          type="number"
+          value={formData.stock || 0}
+          onChange={e => handleChange('stock', e.target.value)}
+          className="w-full p-2 border border-gray-300 rounded outline-none"
         />
       </div>
+
+      <ImageUploadField
+        value={formData.imageUrl || ''}
+        onChange={url => handleChange('imageUrl', url)}
+      />
 
       {submitError && (
         <div className="bg-red-50 border border-red-200 text-red-700 text-sm p-3 rounded">

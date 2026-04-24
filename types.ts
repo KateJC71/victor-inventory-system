@@ -3,6 +3,7 @@ export interface Product {
   sku: string;
   name: string;
   modelName: string;
+  masterName?: string;  // 系列名稱 (Master_Name 欄)
   category: CategoryType;
   subCategory?: string; // New field for sub-category
   color: string;
@@ -14,6 +15,8 @@ export interface Product {
   stock: number;
   imageUrl: string;
 }
+
+export const GENDERS = ['JR', 'メンズ', 'レディース', 'ユニ'] as const;
 
 export enum CategoryType {
   Racket = 'ラケット',
