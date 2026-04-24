@@ -188,7 +188,7 @@ export const ModelSearchView: React.FC<ModelSearchViewProps> = ({ products }) =>
                       {selectedVariant && (
                         <div className="mt-5 pt-4 border-t border-stone-200">
                           <div className="section-label mb-3">選択中の商品</div>
-                          <ProductCard product={selectedVariant} variant="row" />
+                          <ProductCard product={selectedVariant} variant="detail" />
                         </div>
                       )}
                     </div>
