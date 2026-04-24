@@ -137,27 +137,26 @@ const App: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
-        <div className="text-blue-600 font-bold">データを読み込み中...</div>
-        <div className="text-gray-500 text-sm mt-2">Google Sheets に接続しています</div>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-stone-50">
+        <div className="animate-spin rounded-full h-10 w-10 border-2 border-stone-900 border-t-transparent mb-4"></div>
+        <div className="text-stone-900 font-bold">データを読み込み中</div>
+        <div className="text-stone-500 text-sm mt-2">Google Sheets に接続しています</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col max-w-md mx-auto md:max-w-full shadow-2xl md:shadow-none min-h-screen bg-white md:bg-gray-100">
-
-      {/* データソース表示 */}
+    <div className="min-h-screen flex flex-col">
+      {/* データソース警告（非 Google Sheets 時） */}
       {dataSource !== 'google-sheets' && (
-        <div className="bg-yellow-100 border-b border-yellow-300 px-4 py-2 text-sm text-yellow-800 flex items-center justify-between">
-          <span>
-            {dataSource === 'local-storage' && '⚠️ ローカルキャッシュを使用中'}
-            {dataSource === 'mock-data' && '⚠️ デモデータを使用中'}
+        <div className="bg-amber-50 border-b border-amber-200 px-4 py-2.5 text-sm text-amber-900 flex items-center justify-between gap-3">
+          <span className="font-semibold">
+            {dataSource === 'local-storage' && 'ローカルキャッシュを使用中'}
+            {dataSource === 'mock-data' && 'デモデータを使用中'}
           </span>
           <button
             onClick={handleRefreshFromSheets}
-            className="text-yellow-800 underline hover:text-yellow-900"
+            className="text-amber-900 underline font-semibold hover:text-amber-950"
           >
             再読み込み
           </button>
@@ -165,14 +164,14 @@ const App: React.FC = () => {
       )}
 
       {error && (
-        <div className="bg-red-50 border-b border-red-200 px-4 py-2 text-sm text-red-600">
+        <div className="bg-red-50 border-b border-red-200 px-4 py-2.5 text-sm text-red-700 font-semibold">
           {error}
         </div>
       )}
 
       <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} />
 
-      <main className="flex-1 pb-10">
+      <main className="flex-1 pb-tab-bar">
         {activeTab === 'single' && <SingleSearchView products={products} />}
         {activeTab === 'model' && <ModelSearchView products={products} />}
         {activeTab === 'category' && <CategoryView products={products} />}
@@ -194,12 +193,12 @@ const App: React.FC = () => {
         )}
       </main>
 
-      <footer className="py-6 text-center text-gray-400 text-xs">
+      <footer className="hidden md:block py-8 text-center text-stone-400 text-xs border-t border-stone-200 bg-white">
         <p>&copy; 2024 Victor Inventory System</p>
-        <p className="mt-1">
-          データソース: {dataSource === 'google-sheets' ? '📊 Google Sheets' :
-                        dataSource === 'local-storage' ? '💾 ローカル' : '📦 デモ'}
-          {' | '}商品数: {products.length}
+        <p className="mt-1 mono">
+          {dataSource === 'google-sheets' ? 'Google Sheets' :
+           dataSource === 'local-storage' ? 'Local Cache' : 'Demo'}
+          {' · '}商品数 {products.length}
         </p>
       </footer>
     </div>

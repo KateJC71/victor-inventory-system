@@ -37,11 +37,11 @@ const ImageUploadField: React.FC<{ value: string; onChange: (url: string) => voi
 
   return (
     <div>
-      <label className="block text-xs font-bold text-gray-500 mb-1">商品画像 (任意)</label>
+      <label className="block text-xs font-bold text-stone-500 mb-1">商品画像 (任意)</label>
 
       {value ? (
         <div className="relative">
-          <img src={value} alt="preview" className="w-full max-w-xs rounded border border-gray-200" />
+          <img src={value} alt="preview" className="w-full max-w-xs rounded border border-stone-200" />
           <button
             type="button"
             onClick={() => onChange('')}
@@ -58,19 +58,19 @@ const ImageUploadField: React.FC<{ value: string; onChange: (url: string) => voi
           onDrop={handleDrop}
           onClick={() => fileInputRef.current?.click()}
           className={`cursor-pointer border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
-            dragOver ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-blue-400 hover:bg-gray-50'
+            dragOver ? 'border-stone-200 bg-stone-50' : 'border-stone-300 hover:border-stone-200 hover:bg-stone-50'
           }`}
         >
           {uploading ? (
-            <div className="flex flex-col items-center gap-2 text-blue-600">
+            <div className="flex flex-col items-center gap-2 text-stone-900">
               <Loader2 size={24} className="animate-spin" />
               <span className="text-sm">アップロード中...</span>
             </div>
           ) : (
-            <div className="flex flex-col items-center gap-2 text-gray-500">
+            <div className="flex flex-col items-center gap-2 text-stone-500">
               <Upload size={24} />
               <span className="text-sm font-medium">画像をドラッグ または クリックして選択</span>
-              <span className="text-xs text-gray-400">JPG / PNG / GIF / WebP</span>
+              <span className="text-xs text-stone-400">JPG / PNG / GIF / WebP</span>
             </div>
           )}
           <input
@@ -87,14 +87,14 @@ const ImageUploadField: React.FC<{ value: string; onChange: (url: string) => voi
         <p className="mt-2 text-xs text-red-600">❌ {uploadError}</p>
       )}
 
-      <p className="mt-2 text-xs text-gray-400">
+      <p className="mt-2 text-xs text-stone-400">
         または URL を直接入力：
       </p>
       <input
         type="text"
         value={value}
         onChange={e => onChange(e.target.value)}
-        className="mt-1 w-full p-2 border border-gray-200 rounded text-xs text-gray-600"
+        className="mt-1 w-full p-2 border border-stone-200 rounded text-xs text-stone-600"
         placeholder="https://..."
       />
     </div>
@@ -130,14 +130,14 @@ export const ManageView: React.FC<ManageViewProps> = ({ products, onAddProduct, 
   // 密碼輸入畫面
   if (!isAuthenticated) {
     return (
-      <div className="p-4 max-w-md mx-auto min-h-[80vh] flex items-center justify-center">
-        <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-200 w-full">
+      <div className="p-4 max-w-md mx-auto flex items-center justify-center">
+        <div className="bg-white p-8 rounded-xl shadow-sm border border-stone-200 w-full">
           <div className="text-center mb-6">
-            <div className="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Lock className="text-blue-600" size={32} />
+            <div className="bg-stone-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Lock className="text-stone-900" size={32} />
             </div>
-            <h2 className="text-xl font-bold text-gray-900">管理者認証</h2>
-            <p className="text-gray-500 text-sm mt-1">パスワードを入力してください</p>
+            <h2 className="text-xl font-bold text-stone-900">管理者認証</h2>
+            <p className="text-stone-500 text-sm mt-1">パスワードを入力してください</p>
           </div>
 
           <form onSubmit={handleLogin} className="space-y-4">
@@ -146,7 +146,7 @@ export const ManageView: React.FC<ManageViewProps> = ({ products, onAddProduct, 
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-center text-lg tracking-widest"
+                className="w-full p-3 border border-stone-300 rounded-lg focus:ring-2 focus:ring-stone-900 outline-none text-center text-lg tracking-widest"
                 placeholder="••••••••"
                 autoFocus
               />
@@ -156,7 +156,7 @@ export const ManageView: React.FC<ManageViewProps> = ({ products, onAddProduct, 
             )}
             <button
               type="submit"
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition-colors"
+              className="w-full bg-stone-900 hover:bg-stone-900 text-white font-bold py-3 rounded-lg transition-colors"
             >
               ログイン
             </button>
@@ -167,13 +167,13 @@ export const ManageView: React.FC<ManageViewProps> = ({ products, onAddProduct, 
   }
 
   return (
-    <div className="p-4 max-w-3xl mx-auto min-h-[80vh]">
+    <div className="p-4 max-w-7xl mx-auto">
       <div className="flex justify-center mb-6 overflow-x-auto">
-        <div className="bg-gray-100 p-1 rounded-lg flex text-sm font-medium">
+        <div className="bg-stone-100 p-1 rounded-lg flex text-sm font-medium">
           <button
             onClick={() => setActiveSubTab('add')}
             className={`px-4 py-2 rounded-md transition-all flex items-center gap-2 whitespace-nowrap ${
-              activeSubTab === 'add' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+              activeSubTab === 'add' ? 'bg-white text-stone-900 shadow-sm' : 'text-stone-500 hover:text-stone-700'
             }`}
           >
             <PackagePlus size={16} />
@@ -182,7 +182,7 @@ export const ManageView: React.FC<ManageViewProps> = ({ products, onAddProduct, 
           <button
             onClick={() => setActiveSubTab('bulk')}
             className={`px-4 py-2 rounded-md transition-all flex items-center gap-2 whitespace-nowrap ${
-              activeSubTab === 'bulk' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+              activeSubTab === 'bulk' ? 'bg-white text-stone-900 shadow-sm' : 'text-stone-500 hover:text-stone-700'
             }`}
           >
             <FileSpreadsheet size={16} />
@@ -191,7 +191,7 @@ export const ManageView: React.FC<ManageViewProps> = ({ products, onAddProduct, 
           <button
             onClick={() => setActiveSubTab('structure')}
             className={`px-4 py-2 rounded-md transition-all flex items-center gap-2 whitespace-nowrap ${
-              activeSubTab === 'structure' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+              activeSubTab === 'structure' ? 'bg-white text-stone-900 shadow-sm' : 'text-stone-500 hover:text-stone-700'
             }`}
           >
             <FolderTree size={16} />
@@ -340,31 +340,31 @@ const AddProductForm: React.FC<{ products: Product[], onAdd: (p: Product) => voi
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 space-y-4">
+    <form onSubmit={handleSubmit} className="bg-white p-6 rounded-xl shadow-sm border border-stone-200 space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-xs font-bold text-gray-500 mb-1">SKU (必須)</label>
+          <label className="block text-xs font-bold text-stone-500 mb-1">SKU (必須)</label>
           <input
             type="text"
             value={formData.sku || ''}
             onChange={e => handleChange('sku', e.target.value)}
-            className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none"
+            className="w-full p-2 border border-stone-300 rounded focus:ring-2 focus:ring-stone-900 outline-none"
             placeholder="A170JR-Example"
             required
           />
         </div>
         <div>
-           <label className="block text-xs font-bold text-gray-500 mb-1">Model Name (必須)</label>
+           <label className="block text-xs font-bold text-stone-500 mb-1">Model Name (必須)</label>
            <input
             type="text"
             value={formData.modelName || ''}
             onChange={e => handleChange('modelName', e.target.value)}
-            className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none"
+            className="w-full p-2 border border-stone-300 rounded focus:ring-2 focus:ring-stone-900 outline-none"
             placeholder="A170JR"
             required
           />
           {autofillHint && (
-            <p className="mt-1 text-xs text-blue-600 flex items-center gap-1">
+            <p className="mt-1 text-xs text-stone-900 flex items-center gap-1">
               <Sparkles size={12} />
               {autofillHint}
             </p>
@@ -374,11 +374,11 @@ const AddProductForm: React.FC<{ products: Product[], onAdd: (p: Product) => voi
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-xs font-bold text-gray-500 mb-1">大分類</label>
+          <label className="block text-xs font-bold text-stone-500 mb-1">大分類</label>
           <select
             value={formData.category}
             onChange={e => handleChange('category', e.target.value)}
-            className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none bg-white"
+            className="w-full p-2 border border-stone-300 rounded focus:ring-2 focus:ring-stone-900 outline-none bg-white"
           >
             {CATEGORIES.map(c => (
               <option key={c} value={c}>{c}</option>
@@ -386,7 +386,7 @@ const AddProductForm: React.FC<{ products: Product[], onAdd: (p: Product) => voi
           </select>
         </div>
         <div>
-          <label className="block text-xs font-bold text-gray-500 mb-1">小分類</label>
+          <label className="block text-xs font-bold text-stone-500 mb-1">小分類</label>
           <select
             value={formData.subCategory || ''}
             onChange={e => {
@@ -397,7 +397,7 @@ const AddProductForm: React.FC<{ products: Product[], onAdd: (p: Product) => voi
                 handleChange('subCategory', e.target.value);
               }
             }}
-            className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none bg-white"
+            className="w-full p-2 border border-stone-300 rounded focus:ring-2 focus:ring-stone-900 outline-none bg-white"
           >
             <option value="">選択してください</option>
             {existingSubCategories.map(sub => (
@@ -413,11 +413,11 @@ const AddProductForm: React.FC<{ products: Product[], onAdd: (p: Product) => voi
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-xs font-bold text-gray-500 mb-1">性別 (任意)</label>
+          <label className="block text-xs font-bold text-stone-500 mb-1">性別 (任意)</label>
           <select
             value={formData.gender || ''}
             onChange={e => handleChange('gender', e.target.value)}
-            className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none bg-white"
+            className="w-full p-2 border border-stone-300 rounded focus:ring-2 focus:ring-stone-900 outline-none bg-white"
           >
             <option value="">指定なし</option>
             {GENDERS.map(g => (
@@ -426,12 +426,12 @@ const AddProductForm: React.FC<{ products: Product[], onAdd: (p: Product) => voi
           </select>
         </div>
         <div>
-          <label className="block text-xs font-bold text-gray-500 mb-1">カラー</label>
+          <label className="block text-xs font-bold text-stone-500 mb-1">カラー</label>
           <input
             type="text"
             value={formData.color || ''}
             onChange={e => handleChange('color', e.target.value)}
-            className="w-full p-2 border border-gray-300 rounded outline-none"
+            className="w-full p-2 border border-stone-300 rounded outline-none"
             placeholder="A / I / M / R 等"
           />
         </div>
@@ -439,32 +439,32 @@ const AddProductForm: React.FC<{ products: Product[], onAdd: (p: Product) => voi
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-xs font-bold text-gray-500 mb-1">サイズ</label>
+          <label className="block text-xs font-bold text-stone-500 mb-1">サイズ</label>
           <input
             type="text"
             value={formData.size || ''}
             onChange={e => handleChange('size', e.target.value)}
-            className="w-full p-2 border border-gray-300 rounded outline-none"
+            className="w-full p-2 border border-stone-300 rounded outline-none"
           />
         </div>
         <div>
-          <label className="block text-xs font-bold text-gray-500 mb-1">価格 (税込)</label>
+          <label className="block text-xs font-bold text-stone-500 mb-1">価格 (税込)</label>
           <input
             type="number"
             value={formData.price || 0}
             onChange={e => handleChange('price', e.target.value)}
-            className="w-full p-2 border border-gray-300 rounded outline-none"
+            className="w-full p-2 border border-stone-300 rounded outline-none"
           />
         </div>
       </div>
 
       <div>
-        <label className="block text-xs font-bold text-gray-500 mb-1">在庫数</label>
+        <label className="block text-xs font-bold text-stone-500 mb-1">在庫数</label>
         <input
           type="number"
           value={formData.stock || 0}
           onChange={e => handleChange('stock', e.target.value)}
-          className="w-full p-2 border border-gray-300 rounded outline-none"
+          className="w-full p-2 border border-stone-300 rounded outline-none"
         />
       </div>
 
@@ -482,7 +482,7 @@ const AddProductForm: React.FC<{ products: Product[], onAdd: (p: Product) => voi
       <button
         type="submit"
         disabled={submitting}
-        className="w-full mt-4 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2 transition-colors"
+        className="w-full mt-4 bg-stone-900 hover:bg-stone-900 disabled:bg-stone-400 disabled:cursor-not-allowed text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2 transition-colors"
       >
         {submitting ? (
           <>
@@ -692,14 +692,14 @@ const BulkImportForm: React.FC<{ products: Product[], onAdd: (p: Product) => voi
   // ===== 結果畫面 =====
   if (stage === 'done' && result) {
     return (
-      <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+      <div className="bg-white p-6 rounded-xl shadow-sm border border-stone-200">
         <div className="flex flex-col items-center text-center py-8">
-          <div className="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mb-4">
-            <CheckCircle className="text-green-600" size={32} />
+          <div className="bg-emerald-100 w-16 h-16 rounded-full flex items-center justify-center mb-4">
+            <CheckCircle className="text-emerald-700" size={32} />
           </div>
-          <h3 className="text-xl font-bold text-gray-900 mb-2">一括登録が完了しました</h3>
-          <p className="text-gray-600 mb-4">
-            <span className="text-2xl font-bold text-green-600">{result.added}</span> 件追加 / {result.skipped > 0 ? <span><span className="text-yellow-600 font-bold">{result.skipped}</span> 件スキップ</span> : null}
+          <h3 className="text-xl font-bold text-stone-900 mb-2">一括登録が完了しました</h3>
+          <p className="text-stone-600 mb-4">
+            <span className="text-2xl font-bold text-emerald-700">{result.added}</span> 件追加 / {result.skipped > 0 ? <span><span className="text-yellow-600 font-bold">{result.skipped}</span> 件スキップ</span> : null}
           </p>
           {result.skippedSkus && result.skippedSkus.length > 0 && (
             <div className="mt-2 p-3 bg-yellow-50 rounded text-left w-full max-w-md">
@@ -709,7 +709,7 @@ const BulkImportForm: React.FC<{ products: Product[], onAdd: (p: Product) => voi
           )}
           <button
             onClick={handleReset}
-            className="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg"
+            className="mt-6 bg-stone-900 hover:bg-stone-900 text-white font-bold py-2 px-6 rounded-lg"
           >
             続けて別のファイルを登録
           </button>
@@ -721,21 +721,21 @@ const BulkImportForm: React.FC<{ products: Product[], onAdd: (p: Product) => voi
   // ===== 預覽畫面 =====
   if (stage === 'preview' || stage === 'submitting') {
     return (
-      <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 space-y-4">
-        <h3 className="text-lg font-bold text-gray-900">登録内容の確認</h3>
+      <div className="bg-white p-6 rounded-xl shadow-sm border border-stone-200 space-y-4">
+        <h3 className="text-lg font-bold text-stone-900">登録内容の確認</h3>
 
         <div className="grid grid-cols-3 gap-3 text-center">
-          <div className="bg-blue-50 rounded-lg p-3">
-            <div className="text-2xl font-bold text-blue-600">{rows.length}</div>
-            <div className="text-xs text-gray-600">読み込み</div>
+          <div className="bg-stone-50 rounded-lg p-3">
+            <div className="text-2xl font-bold text-stone-900">{rows.length}</div>
+            <div className="text-xs text-stone-600">読み込み</div>
           </div>
-          <div className="bg-green-50 rounded-lg p-3">
-            <div className="text-2xl font-bold text-green-600">{newCount}</div>
-            <div className="text-xs text-gray-600">新規追加</div>
+          <div className="bg-emerald-100 rounded-lg p-3">
+            <div className="text-2xl font-bold text-emerald-700">{newCount}</div>
+            <div className="text-xs text-stone-600">新規追加</div>
           </div>
           <div className="bg-yellow-50 rounded-lg p-3">
             <div className="text-2xl font-bold text-yellow-600">{existingCount}</div>
-            <div className="text-xs text-gray-600">既存スキップ</div>
+            <div className="text-xs text-stone-600">既存スキップ</div>
           </div>
         </div>
 
@@ -749,9 +749,9 @@ const BulkImportForm: React.FC<{ products: Product[], onAdd: (p: Product) => voi
           </div>
         )}
 
-        <div className="overflow-x-auto border border-gray-200 rounded-lg">
+        <div className="overflow-x-auto border border-stone-200 rounded-lg">
           <table className="min-w-full text-xs">
-            <thead className="bg-gray-50 border-b border-gray-200">
+            <thead className="bg-stone-50 border-b border-stone-200">
               <tr>
                 <th className="p-2 text-left">行</th>
                 <th className="p-2 text-left">SKU</th>
@@ -771,8 +771,8 @@ const BulkImportForm: React.FC<{ products: Product[], onAdd: (p: Product) => voi
                 const isExisting = existingSkuSet.has(skuUpper);
                 const isDupInFile = duplicateInFile.has(skuUpper);
                 return (
-                  <tr key={idx} className={`border-b border-gray-100 ${isExisting ? 'bg-yellow-50' : ''}`}>
-                    <td className="p-2 text-gray-400">{r._rowIndex}</td>
+                  <tr key={idx} className={`border-b border-stone-100 ${isExisting ? 'bg-yellow-50' : ''}`}>
+                    <td className="p-2 text-stone-400">{r._rowIndex}</td>
                     <td className="p-2 font-mono">{r.sku}</td>
                     <td className="p-2">{r.modelName}</td>
                     <td className="p-2">{r.category}</td>
@@ -786,7 +786,7 @@ const BulkImportForm: React.FC<{ products: Product[], onAdd: (p: Product) => voi
                         ? <span className="text-yellow-600">既存</span>
                         : isDupInFile
                         ? <span className="text-orange-600">重複</span>
-                        : <span className="text-green-600">新規</span>}
+                        : <span className="text-emerald-700">新規</span>}
                     </td>
                   </tr>
                 );
@@ -794,7 +794,7 @@ const BulkImportForm: React.FC<{ products: Product[], onAdd: (p: Product) => voi
             </tbody>
           </table>
           {rows.length > 100 && (
-            <div className="p-3 text-center text-xs text-gray-500 bg-gray-50">
+            <div className="p-3 text-center text-xs text-stone-500 bg-stone-50">
               ...他 {rows.length - 100} 行（全て登録されます）
             </div>
           )}
@@ -811,7 +811,7 @@ const BulkImportForm: React.FC<{ products: Product[], onAdd: (p: Product) => voi
             type="button"
             onClick={handleReset}
             disabled={stage === 'submitting'}
-            className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg disabled:opacity-50"
+            className="px-4 py-2 text-stone-700 bg-stone-100 hover:bg-stone-200 rounded-lg disabled:opacity-50"
           >
             キャンセル
           </button>
@@ -819,7 +819,7 @@ const BulkImportForm: React.FC<{ products: Product[], onAdd: (p: Product) => voi
             type="button"
             onClick={handleSubmit}
             disabled={stage === 'submitting' || newCount === 0}
-            className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg flex items-center gap-2 disabled:opacity-50"
+            className="px-6 py-2 bg-stone-900 hover:bg-stone-900 text-white font-bold rounded-lg flex items-center gap-2 disabled:opacity-50"
           >
             {stage === 'submitting' ? (
               <><Loader2 size={16} className="animate-spin" /> 登録中...</>
@@ -834,8 +834,8 @@ const BulkImportForm: React.FC<{ products: Product[], onAdd: (p: Product) => voi
 
   // ===== 初始畫面 =====
   return (
-    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 space-y-4">
-      <div className="bg-blue-50 rounded-lg p-4 text-sm text-blue-800">
+    <div className="bg-white p-6 rounded-xl shadow-sm border border-stone-200 space-y-4">
+      <div className="bg-stone-50 rounded-lg p-4 text-sm text-stone-900">
         <p className="font-bold mb-1">📝 使い方</p>
         <ol className="list-decimal ml-5 space-y-1 text-xs">
           <li>「テンプレートをダウンロード」で Excel ファイルを取得</li>
@@ -843,7 +843,7 @@ const BulkImportForm: React.FC<{ products: Product[], onAdd: (p: Product) => voi
           <li>ファイルをドラッグまたはクリックしてアップロード</li>
           <li>プレビューで確認 →「登録」をクリック</li>
         </ol>
-        <p className="mt-2 text-xs text-blue-700">
+        <p className="mt-2 text-xs text-stone-900">
           ℹ️ 既存の SKU は自動的にスキップされます（上書きしません）
         </p>
       </div>
@@ -851,7 +851,7 @@ const BulkImportForm: React.FC<{ products: Product[], onAdd: (p: Product) => voi
       <button
         type="button"
         onClick={handleDownloadTemplate}
-        className="w-full flex items-center justify-center gap-2 py-3 border-2 border-blue-200 hover:border-blue-400 hover:bg-blue-50 rounded-lg text-blue-700 font-medium transition-colors"
+        className="w-full flex items-center justify-center gap-2 py-3 border-2 border-stone-200 hover:border-stone-200 hover:bg-stone-50 rounded-lg text-stone-900 font-medium transition-colors"
       >
         <Download size={18} />
         テンプレートをダウンロード (.xlsx)
@@ -863,13 +863,13 @@ const BulkImportForm: React.FC<{ products: Product[], onAdd: (p: Product) => voi
         onDrop={handleDrop}
         onClick={() => fileInputRef.current?.click()}
         className={`cursor-pointer border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
-          dragOver ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-blue-400 hover:bg-gray-50'
+          dragOver ? 'border-stone-200 bg-stone-50' : 'border-stone-300 hover:border-stone-200 hover:bg-stone-50'
         }`}
       >
-        <div className="flex flex-col items-center gap-2 text-gray-500">
+        <div className="flex flex-col items-center gap-2 text-stone-500">
           <Upload size={32} />
           <span className="text-sm font-medium">Excel ファイルをドラッグ または クリックして選択</span>
-          <span className="text-xs text-gray-400">.xlsx / .xls / .csv</span>
+          <span className="text-xs text-stone-400">.xlsx / .xls / .csv</span>
         </div>
         <input
           type="file"
@@ -956,7 +956,7 @@ const CategoryStructureEditor: React.FC<{
 
   return (
     <div className="space-y-3">
-      <div className="bg-blue-50 p-4 rounded-lg border border-blue-100 text-sm text-blue-800 mb-4">
+      <div className="bg-stone-50 p-4 rounded-lg border border-stone-200 text-sm text-stone-900 mb-4">
         <p>ここで小分類の名前を変更すると、関連するすべての商品の小分類が一括で更新されます。</p>
       </div>
 
@@ -966,55 +966,55 @@ const CategoryStructureEditor: React.FC<{
         const isOpen = openCategory === category;
 
         return (
-          <div key={category} className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+          <div key={category} className="bg-white border border-stone-200 rounded-lg overflow-hidden">
             <button
               onClick={() => setOpenCategory(isOpen ? null : category)}
-              className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 transition-colors"
+              className="w-full flex items-center justify-between p-4 bg-stone-50 hover:bg-stone-100 transition-colors"
             >
               <div className="flex items-center gap-2">
-                <span className="font-bold text-gray-800">{category}</span>
-                <span className="text-xs bg-white border px-2 py-0.5 rounded-full text-gray-500">
+                <span className="font-bold text-stone-800">{category}</span>
+                <span className="text-xs bg-white border px-2 py-0.5 rounded-full text-stone-500">
                   {subCats.length} 小分類
                 </span>
               </div>
-              {isOpen ? <ChevronDown size={18} className="text-gray-400" /> : <ChevronRight size={18} className="text-gray-400" />}
+              {isOpen ? <ChevronDown size={18} className="text-stone-400" /> : <ChevronRight size={18} className="text-stone-400" />}
             </button>
 
             {isOpen && (
               <div className="p-2 space-y-1">
                 {subCats.length === 0 && !addingTo && (
-                   <p className="text-center py-4 text-gray-400 text-xs italic">小分類はまだありません</p>
+                   <p className="text-center py-4 text-stone-400 text-xs italic">小分類はまだありません</p>
                 )}
                 {subCats.map(sub => (
-                  <div key={sub} className="flex items-center justify-between p-3 bg-white border border-gray-100 rounded hover:border-blue-100 group">
+                  <div key={sub} className="flex items-center justify-between p-3 bg-white border border-stone-100 rounded hover:border-stone-200 group">
                     {editingSub?.cat === category && editingSub?.oldName === sub ? (
                       <div className="flex items-center gap-2 w-full">
                          <input
                            type="text"
                            value={newName}
                            onChange={(e) => setNewName(e.target.value)}
-                           className="flex-1 p-1 border border-blue-300 rounded text-sm outline-none"
+                           className="flex-1 p-1 border border-stone-200 rounded text-sm outline-none"
                            autoFocus
                          />
-                         <button onClick={handleSave} className="p-1 text-green-600 hover:bg-green-50 rounded"><Check size={16}/></button>
+                         <button onClick={handleSave} className="p-1 text-emerald-700 hover:bg-emerald-100 rounded"><Check size={16}/></button>
                          <button onClick={() => setEditingSub(null)} className="p-1 text-red-500 hover:bg-red-50 rounded"><X size={16}/></button>
                       </div>
                     ) : (
                       <>
-                        <span className="text-sm text-gray-700 ml-2">{sub}</span>
+                        <span className="text-sm text-stone-700 ml-2">{sub}</span>
                         <div className="flex items-center gap-2">
-                          <span className="text-xs text-gray-400 mr-2">
+                          <span className="text-xs text-stone-400 mr-2">
                             {products.filter(p => p.category === category && p.subCategory === sub).length} items
                           </span>
                           <button
                             onClick={() => handleEditClick(category, sub)}
-                            className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                            className="p-1.5 text-stone-400 hover:text-stone-900 hover:bg-stone-50 rounded transition-colors"
                           >
                             <Edit2 size={14} />
                           </button>
                           <button
                             onClick={() => handleDelete(category, sub)}
-                            className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                            className="p-1.5 text-stone-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
                           >
                             <Trash2 size={14} />
                           </button>
@@ -1026,18 +1026,18 @@ const CategoryStructureEditor: React.FC<{
 
                 {/* 新增小分類 */}
                 {addingTo === category ? (
-                  <div className="flex items-center gap-2 p-3 bg-blue-50 border border-blue-200 rounded">
+                  <div className="flex items-center gap-2 p-3 bg-stone-50 border border-stone-200 rounded">
                     <input
                       type="text"
                       value={newSubName}
                       onChange={(e) => setNewSubName(e.target.value)}
-                      className="flex-1 p-1 border border-blue-300 rounded text-sm outline-none"
+                      className="flex-1 p-1 border border-stone-200 rounded text-sm outline-none"
                       placeholder="新しい小分類名..."
                       autoFocus
                     />
                     <button
                       onClick={() => handleAddSubCategory(category)}
-                      className="p-1 text-green-600 hover:bg-green-50 rounded"
+                      className="p-1 text-emerald-700 hover:bg-emerald-100 rounded"
                     >
                       <Check size={16}/>
                     </button>
@@ -1051,7 +1051,7 @@ const CategoryStructureEditor: React.FC<{
                 ) : (
                   <button
                     onClick={() => setAddingTo(category)}
-                    className="w-full flex items-center justify-center gap-2 p-3 text-blue-600 hover:bg-blue-50 border border-dashed border-blue-300 rounded transition-colors text-sm"
+                    className="w-full flex items-center justify-center gap-2 p-3 text-stone-900 hover:bg-stone-50 border border-dashed border-stone-200 rounded transition-colors text-sm"
                   >
                     <Plus size={16} />
                     小分類を追加

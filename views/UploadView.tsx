@@ -170,24 +170,24 @@ export const UploadView: React.FC<UploadViewProps> = ({ onUpdateInventory, curre
   };
 
   return (
-    <div className="p-4 max-w-3xl mx-auto min-h-[80vh]">
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+    <div className="p-4 max-w-7xl mx-auto">
+      <div className="bg-white rounded-xl shadow-sm border border-stone-200 p-6">
         <div className="text-center mb-6">
-          <h2 className="text-xl font-bold text-gray-900">在庫データ更新</h2>
-          <p className="text-gray-500 text-sm mt-1">最新の在庫CSVファイルをアップロードしてください</p>
+          <h2 className="text-xl font-bold text-stone-900">在庫データ更新</h2>
+          <p className="text-stone-500 text-sm mt-1">最新の在庫CSVファイルをアップロードしてください</p>
         </div>
 
         {/* 現在狀態 */}
-        <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 mb-6">
+        <div className="bg-stone-50 border border-stone-200 rounded-lg p-4 mb-6">
           <div className="flex justify-between items-center">
             <div>
-              <div className="text-blue-800 text-sm font-medium">現在の登録商品数</div>
-              <div className="text-2xl font-bold text-blue-900">{currentCount}</div>
+              <div className="text-stone-900 text-sm font-medium">現在の登録商品数</div>
+              <div className="text-2xl font-bold text-stone-900">{currentCount}</div>
             </div>
             <button
               onClick={handleRefresh}
               disabled={status === 'processing'}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-stone-900 text-white rounded-lg hover:bg-stone-900 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               <RefreshCw size={16} className={status === 'processing' ? 'animate-spin' : ''} />
               再読み込み
@@ -199,7 +199,7 @@ export const UploadView: React.FC<UploadViewProps> = ({ onUpdateInventory, curre
         <div
           className={`
             border-2 border-dashed rounded-xl p-8 text-center transition-colors cursor-pointer
-            ${isDragging ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-blue-400 hover:bg-gray-50'}
+            ${isDragging ? 'border-stone-200 bg-stone-50' : 'border-stone-300 hover:border-stone-200 hover:bg-stone-50'}
             ${status === 'processing' ? 'opacity-50 pointer-events-none' : ''}
           `}
           onDragOver={handleDragOver}
@@ -217,25 +217,25 @@ export const UploadView: React.FC<UploadViewProps> = ({ onUpdateInventory, curre
 
           {status === 'processing' ? (
             <div className="flex flex-col items-center py-4">
-              <Loader2 className="animate-spin text-blue-600 mb-3" size={48} />
-              <p className="text-blue-600 font-medium">{message}</p>
+              <Loader2 className="animate-spin text-stone-900 mb-3" size={48} />
+              <p className="text-stone-900 font-medium">{message}</p>
             </div>
           ) : status === 'success' ? (
              <div className="flex flex-col items-center py-4">
-              <CheckCircle className="text-green-500 mb-3" size={48} />
-              <p className="text-green-600 font-bold text-lg">{message}</p>
+              <CheckCircle className="text-emerald-700 mb-3" size={48} />
+              <p className="text-emerald-700 font-bold text-lg">{message}</p>
 
               {uploadDetails && (
                 <div className="mt-4 text-sm space-y-1">
-                  <p className="text-gray-600">
-                    <span className="font-medium text-green-600">{uploadDetails.matched}</span> 件マッチ
+                  <p className="text-stone-600">
+                    <span className="font-medium text-emerald-700">{uploadDetails.matched}</span> 件マッチ
                     {uploadDetails.unmatched > 0 && (
                       <span className="text-orange-500 ml-2">
                         ({uploadDetails.unmatched} 件未登録SKU)
                       </span>
                     )}
                   </p>
-                  <p className="text-gray-400 text-xs">
+                  <p className="text-stone-400 text-xs">
                     CSVファイル内: {uploadDetails.total} 件
                   </p>
                 </div>
@@ -252,7 +252,7 @@ export const UploadView: React.FC<UploadViewProps> = ({ onUpdateInventory, curre
                       </span>
                     </div>
                     {writeStatus === 'done' ? (
-                      <span className="text-xs text-green-600 font-medium">書き込み完了</span>
+                      <span className="text-xs text-emerald-700 font-medium">書き込み完了</span>
                     ) : (
                       <button
                         onClick={handleWriteUnregistered}
@@ -270,7 +270,7 @@ export const UploadView: React.FC<UploadViewProps> = ({ onUpdateInventory, curre
                   </div>
 
                   {writeMessage && (
-                    <div className={`px-4 py-2 text-xs ${writeStatus === 'error' ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-600'}`}>
+                    <div className={`px-4 py-2 text-xs ${writeStatus === 'error' ? 'bg-red-50 text-red-600' : 'bg-emerald-100 text-emerald-700'}`}>
                       {writeMessage}
                     </div>
                   )}
@@ -278,8 +278,8 @@ export const UploadView: React.FC<UploadViewProps> = ({ onUpdateInventory, curre
                   <div className="max-h-48 overflow-y-auto divide-y divide-orange-100">
                     {unmatchedProducts.map((p, i) => (
                       <div key={i} className="px-4 py-2 text-xs flex gap-3">
-                        <span className="text-gray-500 font-mono shrink-0">{p.sku}</span>
-                        <span className="text-gray-700 truncate">{p.productName}</span>
+                        <span className="text-stone-500 font-mono shrink-0">{p.sku}</span>
+                        <span className="text-stone-700 truncate">{p.productName}</span>
                       </div>
                     ))}
                   </div>
@@ -288,19 +288,19 @@ export const UploadView: React.FC<UploadViewProps> = ({ onUpdateInventory, curre
 
               <button
                 onClick={(e) => { e.stopPropagation(); setStatus('idle'); setUploadDetails(null); setUnmatchedProducts([]); setWriteStatus('idle'); }}
-                className="mt-4 text-blue-600 underline text-sm"
+                className="mt-4 text-stone-900 underline text-sm"
               >
                 続けてアップロード
               </button>
             </div>
           ) : (
             <div className="flex flex-col items-center py-4">
-              <div className="bg-blue-100 p-4 rounded-full mb-4">
-                <Upload className="text-blue-600" size={32} />
+              <div className="bg-stone-100 p-4 rounded-full mb-4">
+                <Upload className="text-stone-900" size={32} />
               </div>
-              <p className="text-gray-900 font-medium text-lg">クリックしてファイルを選択</p>
-              <p className="text-gray-400 text-sm mt-2">またはここにファイルをドロップ</p>
-              <p className="text-xs text-gray-400 mt-4">対応: Shift-JIS / UTF-8 CSV</p>
+              <p className="text-stone-900 font-medium text-lg">クリックしてファイルを選択</p>
+              <p className="text-stone-400 text-sm mt-2">またはここにファイルをドロップ</p>
+              <p className="text-xs text-stone-400 mt-4">対応: Shift-JIS / UTF-8 CSV</p>
             </div>
           )}
         </div>
@@ -313,23 +313,23 @@ export const UploadView: React.FC<UploadViewProps> = ({ onUpdateInventory, curre
         )}
 
         {/* 說明區域 */}
-        <div className="mt-8 pt-6 border-t border-gray-100">
-          <div className="mb-4 text-left bg-gray-50 p-4 rounded-lg text-sm text-gray-600 space-y-2">
-            <div className="flex items-center gap-2 text-gray-800 font-bold mb-2">
+        <div className="mt-8 pt-6 border-t border-stone-100">
+          <div className="mb-4 text-left bg-stone-50 p-4 rounded-lg text-sm text-stone-600 space-y-2">
+            <div className="flex items-center gap-2 text-stone-800 font-bold mb-2">
               <Database size={16} />
               CSVフォーマット（在庫システム形式）
             </div>
             <p className="text-xs">
               <span className="font-medium">必須列:</span> 商品コード, 現在在庫数, 標準価格
             </p>
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-stone-500">
               ※ Shift-JIS エンコーディングに対応しています
             </p>
           </div>
 
           <button
             onClick={downloadTemplate}
-            className="w-full flex items-center justify-center gap-2 text-gray-500 hover:text-gray-700 py-2 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium border border-gray-200"
+            className="w-full flex items-center justify-center gap-2 text-stone-500 hover:text-stone-700 py-2 rounded-lg hover:bg-stone-50 transition-colors text-sm font-medium border border-stone-200"
           >
             <FileDown size={16} />
             CSVテンプレートをダウンロード

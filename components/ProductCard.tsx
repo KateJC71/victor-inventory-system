@@ -1,97 +1,66 @@
 import React from 'react';
 import { Product } from '../types';
-import { Package, AlertCircle } from 'lucide-react';
+import { CategoryTag } from './CategoryTag';
+import { StockPill } from './StockPill';
 
 interface ProductCardProps {
   product: Product;
-  compact?: boolean;
+  variant?: 'row' | 'grid';  // row = mobile horizontal, grid = desktop vertical
 }
 
-export const ProductCard: React.FC<ProductCardProps> = ({ product, compact = false }) => {
-  const isOutOfStock = product.stock <= 0;
-  const isLowStock = product.stock > 0 && product.stock < 5;
+export const ProductCard: React.FC<ProductCardProps> = ({ product, variant = 'row' }) => {
+  const isOut = product.stock <= 0;
+  const phLabel = product.sku.split(/[-\s]/)[0].slice(0, 7);
 
-  return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden w-full mb-4">
-      {/* Product Image */}
-      <div className="w-full h-56 bg-gray-50 relative">
-        <img
-          src={product.imageUrl}
-          alt={product.name}
-          className="w-full h-full object-contain"
-        />
-        {isOutOfStock && (
-          <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-            <span className="text-white text-xs font-bold px-2 py-1 bg-red-600 rounded">SOLD OUT</span>
-          </div>
+  // Build subtitle: color / size / weight / grip (non-empty, joined)
+  const subParts = [product.color, product.size, product.weightClass, product.gripSize].filter(Boolean);
+  const subtitle = subParts.length ? subParts.join(' / ') : product.gender || '';
+  const seriesLine = product.subCategory || product.modelName || '';
+
+  if (variant === 'grid') {
+    return (
+      <article className={`vi-card vi-card-hover p-4 ${isOut ? 'vi-card-out' : ''}`}>
+        {product.imageUrl ? (
+          <img src={product.imageUrl} alt={product.sku} className="w-full aspect-square object-cover rounded-xl mb-4" loading="lazy" />
+        ) : (
+          <div className="vi-ph w-full aspect-square mb-4">{phLabel}</div>
         )}
-      </div>
+        <div className="flex items-center gap-2 mb-2">
+          <CategoryTag category={product.category} />
+          {subtitle && <span className="text-[13px] text-stone-500 font-semibold mono">{subtitle}</span>}
+        </div>
+        <div className="product-sku product-sku-mono truncate mb-0.5">{product.sku}</div>
+        {seriesLine && <div className="product-meta">{seriesLine}</div>}
+        <div className="flex items-end justify-between mt-4">
+          <StockPill stock={product.stock} />
+          <span className={`price-lg ${isOut ? 'price-out' : ''}`}>¥{product.price.toLocaleString()}</span>
+        </div>
+      </article>
+    );
+  }
 
-      {/* Product Details */}
-      <div className="p-4">
-        {/* Top Row: SKU (emphasized) + Stock */}
-        <div className="flex justify-between items-start">
-          <div>
-            <div className="text-xs text-gray-500">商品SKU名：</div>
-            <div className="text-lg font-bold text-gray-900 font-mono">{product.sku}</div>
+  // 'row' variant — mobile horizontal card
+  return (
+    <article className={`vi-card vi-card-hover p-3 ${isOut ? 'vi-card-out' : ''}`}>
+      <div className="flex gap-3.5">
+        {product.imageUrl ? (
+          <img src={product.imageUrl} alt={product.sku} className="w-[104px] h-[104px] object-cover rounded-xl flex-shrink-0" loading="lazy" />
+        ) : (
+          <div className="vi-ph w-[104px] h-[104px] flex-shrink-0">{phLabel}</div>
+        )}
+        <div className="flex-1 min-w-0 flex flex-col">
+          <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+            <CategoryTag category={product.category} />
+            {subtitle && <span className="text-[13px] text-stone-500 font-semibold mono">{subtitle}</span>}
           </div>
-          <div className={`flex flex-col items-end ${isOutOfStock ? 'text-red-500' : isLowStock ? 'text-orange-500' : 'text-green-600'}`}>
-            <div className="flex items-center gap-1">
-              {isOutOfStock ? <AlertCircle size={14}/> : <Package size={14}/>}
-              <span className="text-xs font-medium">在庫数</span>
-            </div>
-            <span className="text-2xl font-bold tracking-tight">{product.stock}</span>
+          <div className="product-sku product-sku-mono truncate">{product.sku}</div>
+          {seriesLine && <div className="product-meta mt-0.5 truncate">{seriesLine}</div>}
+          <div className="flex items-end justify-between mt-auto pt-2 gap-2">
+            <StockPill stock={product.stock} />
+            <span className={`price ${isOut ? 'price-out' : ''}`}>¥{product.price.toLocaleString()}</span>
           </div>
         </div>
-
-        {/* Product Attributes */}
-        <div className="mt-4 space-y-1.5 text-sm">
-          <div className="flex items-center">
-            <span className="text-gray-500 w-24">カテゴリー：</span>
-            <span className="text-gray-800">{product.category}{product.subCategory ? ` / ${product.subCategory}` : ''}</span>
-          </div>
-          {product.gender && (
-            <div className="flex items-center">
-              <span className="text-gray-500 w-24">ジェンダー：</span>
-              <span className="text-gray-800">{product.gender}</span>
-            </div>
-          )}
-          <div className="flex items-center">
-            <span className="text-gray-500 w-24">価格 (税抜)：</span>
-            <span className="text-gray-800 font-bold">¥{product.price.toLocaleString()}</span>
-          </div>
-          {product.modelName && (
-            <div className="flex items-center">
-              <span className="text-gray-500 w-24">モデル名：</span>
-              <span className="text-gray-800 font-medium">{product.modelName}</span>
-            </div>
-          )}
-          {product.color && (
-            <div className="flex items-center">
-              <span className="text-gray-500 w-24">色：</span>
-              <span className="text-gray-800">{product.color}</span>
-            </div>
-          )}
-          {product.size && (
-            <div className="flex items-center">
-              <span className="text-gray-500 w-24">サイズ：</span>
-              <span className="text-gray-800">{product.size}</span>
-            </div>
-          )}
-          {product.weightClass && (
-            <div className="flex items-center">
-              <span className="text-gray-500 w-24">重量：</span>
-              <span className="text-gray-800">{product.weightClass}</span>
-            </div>
-          )}
-          {product.gripSize && (
-            <div className="flex items-center">
-              <span className="text-gray-500 w-24">グリップ：</span>
-              <span className="text-gray-800">{product.gripSize}</span>
-            </div>
-          )}
-        </div>
       </div>
-    </div>
+    </article>
   );
 };

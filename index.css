@@ -1,0 +1,418 @@
+/* =================================================== */
+/* Victor Inventory — Design System                     */
+/* MUJI 基調 + mercari スキャン感 + シニア向けに最適化      */
+/* =================================================== */
+
+:root {
+  /* Semantic text colors (WCAG 4.5:1+) */
+  --ink: #0C0A09;          /* Primary text */
+  --ink-soft: #44403C;     /* Secondary text (12:1) */
+  --ink-muted: #78716C;    /* Metadata only (5:1) */
+  --paper: #FFFFFF;
+  --paper-soft: #FAFAF9;
+  --line: #E7E5E4;         /* Default border */
+  --line-strong: #D6D3D1;  /* Emphasized border */
+  --brand: #CF0A2C;        /* Victor red — CTA only */
+  --brand-dark: #B5081F;
+
+  /* Stock — traffic light */
+  --in-stock-bg: #D1FAE5;  --in-stock-fg: #065F46;
+  --low-stock-bg: #FED7AA; --low-stock-fg: #9A3412;
+  --no-stock-bg: #FCA5A5;  --no-stock-fg: #7F1D1D;
+}
+
+* {
+  font-family: 'Noto Sans JP', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-feature-settings: "palt" 1;
+}
+
+html { font-size: 16px; }
+
+body {
+  background: var(--paper-soft);
+  color: var(--ink);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+.mono {
+  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  letter-spacing: -0.01em;
+}
+
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* ===== Section header ===== */
+.section-label {
+  font-size: 0.75rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  font-weight: 700;
+}
+
+/* ===== Stock pills ===== */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.875rem;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  line-height: 1;
+}
+.pill-green  { background: var(--in-stock-bg);  color: var(--in-stock-fg); }
+.pill-orange { background: var(--low-stock-bg); color: var(--low-stock-fg); }
+.pill-red    { background: var(--no-stock-bg);  color: var(--no-stock-fg); }
+.pill-sm     { padding: 3px 8px; font-size: 0.8125rem; }
+
+/* ===== Category tags — distinct hues, avoid stock colors ===== */
+.tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 8px;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  line-height: 1.3;
+}
+.tag-racket  { background: #DBEAFE; color: #1E40AF; }
+.tag-shoes   { background: #EEE1CF; color: #78350F; }
+.tag-apparel { background: #EDE9FE; color: #5B21B6; }
+.tag-bag     { background: #FEF08A; color: #854D0E; }
+.tag-grip    { background: #F5D0FE; color: #86198F; }
+.tag-string  { background: #E2E8F0; color: #334155; }
+.tag-shuttle { background: #E0E7FF; color: #3730A3; }
+.tag-other   { background: #F1F0EE; color: #44403C; }
+
+/* ===== Cards ===== */
+.vi-card {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+.vi-card-hover { cursor: pointer; }
+.vi-card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px -8px rgba(15,15,15,.12);
+  border-color: var(--line-strong);
+}
+.vi-card-out { opacity: 0.65; }
+
+/* ===== Image placeholders ===== */
+.vi-ph {
+  background:
+    linear-gradient(135deg, rgba(0,0,0,.02) 0%, rgba(0,0,0,.06) 100%),
+    linear-gradient(#FAFAF9, #FAFAF9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #A8A29E;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 600;
+  font-size: 0.8125rem;
+  letter-spacing: 0.02em;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+/* ===== Inputs / fields ===== */
+.field {
+  width: 100%;
+  background: var(--paper);
+  border: 1.5px solid var(--line);
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--ink);
+  transition: border-color .15s, box-shadow .15s;
+}
+.field::placeholder { color: var(--ink-muted); font-weight: 400; }
+.field:focus {
+  outline: none;
+  border-color: var(--ink);
+  box-shadow: 0 0 0 3px rgba(12,10,9,.08);
+}
+.field-lg {
+  padding: 14px 16px 14px 48px;
+  font-size: 1.0625rem;
+  background: var(--paper-soft);
+  border-color: transparent;
+}
+.field-lg:focus {
+  background: var(--paper);
+  border-color: var(--ink);
+}
+
+.label {
+  display: block;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--ink-soft);
+  margin-bottom: 6px;
+  letter-spacing: 0.01em;
+}
+
+/* ===== Buttons ===== */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 12px 20px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 1rem;
+  line-height: 1;
+  transition: all .15s;
+  cursor: pointer;
+  min-height: 44px;
+}
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btn-primary {
+  background: var(--brand);
+  color: white;
+  border: 1.5px solid var(--brand);
+}
+.btn-primary:hover:not(:disabled) {
+  background: var(--brand-dark);
+  border-color: var(--brand-dark);
+}
+.btn-secondary {
+  background: var(--paper);
+  color: var(--ink);
+  border: 1.5px solid var(--line-strong);
+}
+.btn-secondary:hover:not(:disabled) {
+  background: var(--paper-soft);
+  border-color: var(--ink);
+}
+.btn-dark {
+  background: var(--ink);
+  color: white;
+  border: 1.5px solid var(--ink);
+}
+
+/* ===== Chips ===== */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border: 1.5px solid var(--line);
+  background: var(--paper);
+  color: var(--ink-soft);
+  cursor: pointer;
+  transition: all .15s;
+  min-height: 36px;
+  white-space: nowrap;
+}
+.chip:hover { border-color: var(--ink); color: var(--ink); }
+.chip-active {
+  background: var(--ink);
+  color: white;
+  border-color: var(--ink);
+}
+.chip-active:hover { color: white; }
+
+/* ===== Nav links (desktop top nav) ===== */
+.nav-link {
+  display: inline-flex;
+  align-items: center;
+  padding: 10px 18px;
+  border-radius: 999px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+  cursor: pointer;
+  transition: all .15s;
+  white-space: nowrap;
+}
+.nav-link:hover { background: var(--paper-soft); color: var(--ink); }
+.nav-link-active { background: var(--ink); color: white; }
+.nav-link-active:hover { background: var(--ink); color: white; }
+
+/* ===== Bottom tab bar ===== */
+.tab-btn {
+  flex: 1;
+  padding: 10px 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--ink-muted);
+  cursor: pointer;
+  min-height: 56px;
+  background: transparent;
+  border: none;
+}
+.tab-btn-active { color: var(--ink); }
+.tab-btn svg { width: 24px; height: 24px; }
+.tab-btn-active svg { stroke-width: 2.4; }
+
+/* ===== Product typography ===== */
+.page-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--ink);
+  letter-spacing: -0.01em;
+}
+.page-title-desk {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--ink);
+  letter-spacing: -0.01em;
+}
+
+.product-sku {
+  font-size: 1.0625rem;
+  font-weight: 800;
+  color: var(--ink);
+  letter-spacing: -0.005em;
+  line-height: 1.3;
+}
+.product-sku-mono {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.product-meta {
+  font-size: 0.875rem;
+  color: var(--ink-muted);
+  font-weight: 500;
+}
+.price {
+  font-size: 1.375rem;
+  font-weight: 800;
+  color: var(--ink);
+  letter-spacing: -0.01em;
+  line-height: 1;
+}
+.price-lg {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--ink);
+  letter-spacing: -0.015em;
+  line-height: 1;
+}
+.price-out {
+  color: var(--ink-muted);
+  text-decoration: line-through;
+  text-decoration-thickness: 1.5px;
+}
+
+/* ===== Matrix (MODEL view) ===== */
+.matrix {
+  width: 100%;
+  font-size: 0.9375rem;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+.matrix th {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--ink-soft);
+  padding: 10px 8px;
+  text-align: center;
+  border-bottom: 2px solid var(--line);
+}
+.matrix th:first-child { text-align: left; color: var(--ink-muted); }
+.matrix td {
+  padding: 10px 8px;
+  text-align: center;
+  border-bottom: 1px solid var(--line);
+  font-weight: 700;
+  color: var(--ink);
+}
+.matrix td:first-child {
+  text-align: left;
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+.matrix tr:last-child td { border-bottom: none; }
+
+/* ===== Alerts ===== */
+.alert-info {
+  background: #EFF6FF;
+  border: 1.5px solid #BFDBFE;
+  border-radius: 12px;
+  padding: 12px 14px;
+  color: #1E3A8A;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.5;
+}
+.alert-error {
+  background: #FEF2F2;
+  border: 1.5px solid #FECACA;
+  border-radius: 12px;
+  padding: 12px 14px;
+  color: #991B1B;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+/* ===== Breadcrumb ===== */
+.crumb {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+  flex-wrap: wrap;
+}
+.crumb-sep { color: var(--ink-muted); font-weight: 400; }
+.crumb-current { color: var(--ink); font-weight: 700; }
+.crumb button { cursor: pointer; background: transparent; border: none; font: inherit; color: inherit; padding: 0; }
+.crumb button:hover { text-decoration: underline; }
+
+/* ===== Check row ===== */
+.check-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.check-row input {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--ink);
+  cursor: pointer;
+}
+
+/* ===== Focus a11y ===== */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+/* ===== Divider ===== */
+.vi-divider { height: 1px; background: var(--line); }
+
+/* ===== Mobile-safe area for bottom tab bar ===== */
+.pb-tab-bar { padding-bottom: calc(72px + env(safe-area-inset-bottom)); }
+
+@media (min-width: 768px) {
+  .pb-tab-bar { padding-bottom: 24px; }
+}
