@@ -98,9 +98,18 @@ body {
   transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
 }
 .vi-card-hover { cursor: pointer; }
-.vi-card-hover:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 24px -8px rgba(15,15,15,.12);
+/* Only apply hover lift on devices that actually hover (mouse, not touch).
+   On touch devices this caused jitter / missed taps on the first tap. */
+@media (hover: hover) {
+  .vi-card-hover:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 24px -8px rgba(15,15,15,.12);
+    border-color: var(--line-strong);
+  }
+}
+/* Touch feedback for mobile taps */
+.vi-card-hover:active {
+  transform: scale(0.99);
   border-color: var(--line-strong);
 }
 .vi-card-out { opacity: 0.65; }

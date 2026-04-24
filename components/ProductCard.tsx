@@ -117,14 +117,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, variant = 'ro
     return (
       <article {...interactionProps} className={`vi-card vi-card-hover p-4 ${isOut ? 'vi-card-out' : ''}`}>
         {product.imageUrl ? (
-          <div className="w-full aspect-square bg-stone-50 rounded-xl mb-4 flex items-center justify-center p-3 overflow-hidden">
-            <img
-              src={product.imageUrl}
-              alt={product.sku}
-              className="max-w-full max-h-full object-contain"
-              loading="lazy"
-            />
-          </div>
+          <img
+            src={product.imageUrl}
+            alt={product.sku}
+            className="w-full aspect-square object-cover rounded-xl mb-4 bg-stone-50"
+            loading="lazy"
+          />
         ) : (
           <div className="vi-ph w-full aspect-square mb-4">{phLabel}</div>
         )}
@@ -149,14 +147,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, variant = 'ro
     <article {...interactionProps} className={`vi-card vi-card-hover p-3 ${isOut ? 'vi-card-out' : ''}`}>
       <div className="flex gap-3.5">
         {product.imageUrl ? (
-          <div className="w-[104px] h-[104px] bg-stone-50 rounded-xl flex-shrink-0 flex items-center justify-center p-1.5 overflow-hidden">
-            <img
-              src={product.imageUrl}
-              alt={product.sku}
-              className="max-w-full max-h-full object-contain"
-              loading="lazy"
-            />
-          </div>
+          <img
+            src={product.imageUrl}
+            alt={product.sku}
+            className="w-[104px] h-[104px] object-cover rounded-xl flex-shrink-0 bg-stone-50"
+            loading="lazy"
+          />
         ) : (
           <div className="vi-ph w-[104px] h-[104px] flex-shrink-0">{phLabel}</div>
         )}

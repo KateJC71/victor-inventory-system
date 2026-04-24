@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Product } from '../types';
 import { ProductCard } from '../components/ProductCard';
+import { ProductDetailModal } from '../components/ProductDetailModal';
 import { CategoryTag } from '../components/CategoryTag';
 import { StockPill, StockPillCount } from '../components/StockPill';
 import { ChevronDown, ChevronUp, Search, X } from 'lucide-react';
@@ -27,7 +28,7 @@ const sortSizes = (sizes: string[]) => {
 export const ModelSearchView: React.FC<ModelSearchViewProps> = ({ products }) => {
   const [query, setQuery] = useState('');
   const [expandedModel, setExpandedModel] = useState<string | null>(null);
-  const [selectedVariant, setSelectedVariant] = useState<Product | null>(null);
+  const [viewedProduct, setViewedProduct] = useState<Product | null>(null);
 
   const grouped = useMemo(() => {
     if (!query.trim()) return {} as Record<string, Product[]>;
@@ -46,14 +47,14 @@ export const ModelSearchView: React.FC<ModelSearchViewProps> = ({ products }) =>
 
   const modelNames = Object.keys(grouped).sort();
 
-  const handleModelClick = (model: string) => {
-    if (expandedModel === model) {
-      setExpandedModel(null);
-      setSelectedVariant(null);
-    } else {
-      setExpandedModel(model);
-      setSelectedVariant(null);
+  const handleHeaderClick = (model: string, items: Product[]) => {
+    // Single-SKU model: open detail directly
+    if (items.length === 1) {
+      setViewedProduct(items[0]);
+      return;
     }
+    // Multi-SKU: toggle expand
+    setExpandedModel(expandedModel === model ? null : model);
   };
 
   return (
@@ -92,9 +93,10 @@ export const ModelSearchView: React.FC<ModelSearchViewProps> = ({ products }) =>
           <div className="space-y-3 md:grid md:grid-cols-2 md:gap-5 md:space-y-0">
             {modelNames.map(model => {
               const items = grouped[model];
-              const isExpanded = expandedModel === model || modelNames.length === 1;
+              const isExpanded = expandedModel === model;
               const colors = Array.from(new Set(items.map(i => i.color).filter(Boolean))).sort();
               const sizes = sortSizes(Array.from(new Set(items.map(i => i.size).filter(Boolean))));
+              const hasMatrix = colors.length > 0 && sizes.length > 0;
               const colorImages: Record<string, string> = {};
               items.forEach(it => { if (!colorImages[it.color]) colorImages[it.color] = it.imageUrl; });
               const prices = items.map(i => i.price);
@@ -103,10 +105,15 @@ export const ModelSearchView: React.FC<ModelSearchViewProps> = ({ products }) =>
               const totalStock = items.reduce((a, c) => a + c.stock, 0);
               const cat = items[0].category;
               const sub = items[0].subCategory;
+              const isSingleSku = items.length === 1;
 
               return (
-                <div key={model} className={`vi-card overflow-hidden ${isExpanded ? '' : 'vi-card-hover'}`}>
-                  <button onClick={() => handleModelClick(model)} className="w-full p-4 flex items-start justify-between gap-3 text-left">
+                <div key={model} className={`vi-card overflow-hidden ${!isExpanded ? 'vi-card-hover' : ''}`}>
+                  <button
+                    onClick={() => handleHeaderClick(model, items)}
+                    className="w-full p-4 flex items-start justify-between gap-3 text-left"
+                    aria-expanded={!isSingleSku ? isExpanded : undefined}
+                  >
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1.5">
                         <CategoryTag category={cat} />
@@ -118,80 +125,92 @@ export const ModelSearchView: React.FC<ModelSearchViewProps> = ({ products }) =>
                     <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
                       <div className="text-sm font-bold text-stone-900 mono whitespace-nowrap">{priceStr}</div>
                       <StockPill stock={totalStock} labelPrefix="計" />
-                      {isExpanded ? <ChevronUp size={18} className="text-stone-400" /> : <ChevronDown size={18} className="text-stone-400" />}
+                      {!isSingleSku && (
+                        isExpanded
+                          ? <ChevronUp size={18} className="text-stone-400" />
+                          : <ChevronDown size={18} className="text-stone-400" />
+                      )}
                     </div>
                   </button>
 
-                  {isExpanded && (colors.length > 0 || sizes.length > 0) && (
-                    <div className="vi-divider"></div>
-                  )}
+                  {isExpanded && !isSingleSku && (
+                    <>
+                      <div className="vi-divider"></div>
+                      <div className="p-4 bg-stone-50">
+                        {hasMatrix ? (
+                          <>
+                            {colors.length > 0 && (
+                              <div className="flex gap-3 mb-3 overflow-x-auto no-scrollbar -mx-1 px-1 pb-1">
+                                {colors.map(color => (
+                                  <div key={color} className="text-center flex-shrink-0">
+                                    {colorImages[color] ? (
+                                      <img src={colorImages[color]} alt={color} className="w-14 h-14 object-cover rounded-lg mb-1 bg-stone-100" loading="lazy" />
+                                    ) : (
+                                      <div className="vi-ph w-14 h-14 mb-1 text-xs">{color}</div>
+                                    )}
+                                    <div className="text-[12px] font-bold text-stone-700">{color}</div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
 
-                  {isExpanded && (colors.length > 0 || sizes.length > 0) && (
-                    <div className="p-4 bg-stone-50">
-                      {colors.length > 0 && (
-                        <div className="flex gap-3 mb-3 overflow-x-auto no-scrollbar -mx-1 px-1 pb-1">
-                          {colors.map(color => (
-                            <div key={color} className="text-center flex-shrink-0">
-                              {colorImages[color] ? (
-                                <img src={colorImages[color]} alt={color} className="w-14 h-14 object-cover rounded-lg mb-1" loading="lazy" />
-                              ) : (
-                                <div className="vi-ph w-14 h-14 mb-1 text-xs">{color}</div>
-                              )}
-                              <div className="text-[12px] font-bold text-stone-700">{color}</div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-
-                      <div className="overflow-x-auto">
-                        <table className="matrix">
-                          <thead>
-                            <tr>
-                              <th>Size</th>
-                              {colors.map(c => <th key={c}>{c}</th>)}
-                              <th className="text-right">計</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {sizes.map(size => {
-                              const rowTotal = colors.reduce((sum, color) => {
-                                const p = items.find(i => i.color === color && i.size === size);
-                                return sum + (p?.stock ?? 0);
-                              }, 0);
-                              return (
-                                <tr key={size}>
-                                  <td>{size}</td>
-                                  {colors.map(color => {
-                                    const p = items.find(i => i.color === color && i.size === size);
+                            <div className="overflow-x-auto">
+                              <table className="matrix">
+                                <thead>
+                                  <tr>
+                                    <th>Size</th>
+                                    {colors.map(c => <th key={c}>{c}</th>)}
+                                    <th className="text-right">計</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {sizes.map(size => {
+                                    const rowTotal = colors.reduce((sum, color) => {
+                                      const p = items.find(i => i.color === color && i.size === size);
+                                      return sum + (p?.stock ?? 0);
+                                    }, 0);
                                     return (
-                                      <td key={color}>
-                                        {p ? (
-                                          <button onClick={() => setSelectedVariant(p)} className="focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-900 rounded-full">
-                                            <StockPillCount stock={p.stock} />
-                                          </button>
-                                        ) : (
-                                          <span className="text-stone-300 mono">—</span>
-                                        )}
-                                      </td>
+                                      <tr key={size}>
+                                        <td>{size}</td>
+                                        {colors.map(color => {
+                                          const p = items.find(i => i.color === color && i.size === size);
+                                          return (
+                                            <td key={color}>
+                                              {p ? (
+                                                <button
+                                                  onClick={() => setViewedProduct(p)}
+                                                  className="focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-900 rounded-full"
+                                                  aria-label={`${p.sku} の詳細を表示`}
+                                                >
+                                                  <StockPillCount stock={p.stock} />
+                                                </button>
+                                              ) : (
+                                                <span className="text-stone-300 mono">—</span>
+                                              )}
+                                            </td>
+                                          );
+                                        })}
+                                        <td className="text-right mono font-bold text-stone-500">{rowTotal || '—'}</td>
+                                      </tr>
                                     );
                                   })}
-                                  <td className="text-right mono font-bold text-stone-500">{rowTotal || '—'}</td>
-                                </tr>
-                              );
-                            })}
-                          </tbody>
-                        </table>
+                                </tbody>
+                              </table>
+                            </div>
+
+                            <p className="text-xs text-stone-400 mt-3 text-right">数字をタップして詳細を表示</p>
+                          </>
+                        ) : (
+                          /* Fallback: flat SKU list (no clear color × size axes) */
+                          <div className="space-y-2">
+                            <p className="text-xs text-stone-500 mb-2 font-semibold">SKU 一覧（タップで詳細を表示）</p>
+                            {items.map(p => (
+                              <ProductCard key={p.sku} product={p} variant="row" onClick={setViewedProduct} />
+                            ))}
+                          </div>
+                        )}
                       </div>
-
-                      <p className="text-xs text-stone-400 mt-3 text-right">数字をタップして詳細を表示</p>
-
-                      {selectedVariant && (
-                        <div className="mt-5 pt-4 border-t border-stone-200">
-                          <div className="section-label mb-3">選択中の商品</div>
-                          <ProductCard product={selectedVariant} variant="detail" />
-                        </div>
-                      )}
-                    </div>
+                    </>
                   )}
                 </div>
               );
@@ -199,6 +218,8 @@ export const ModelSearchView: React.FC<ModelSearchViewProps> = ({ products }) =>
           </div>
         )}
       </div>
+
+      <ProductDetailModal product={viewedProduct} onClose={() => setViewedProduct(null)} />
     </div>
   );
 };
