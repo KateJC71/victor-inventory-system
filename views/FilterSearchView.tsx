@@ -128,10 +128,12 @@ export const FilterSearchView: React.FC<FilterSearchViewProps> = ({ products }) 
   const selectedProduct = selectedSku ? products.find(p => p.sku === selectedSku) : null;
 
   const BackBtn: React.FC<{ label: string }> = ({ label }) => (
-    <button onClick={handleBack} className="btn btn-secondary mb-5">
-      <ArrowLeft size={18} />
-      {label}
-    </button>
+    <div className="mb-5">
+      <button onClick={handleBack} className="btn btn-secondary">
+        <ArrowLeft size={18} />
+        {label}
+      </button>
+    </div>
   );
 
   // ── Single SKU detail ──

@@ -174,10 +174,12 @@ export const CategoryView: React.FC<CategoryViewProps> = ({ products }) => {
   );
 
   const BackBtn: React.FC<{ onClick: () => void; label: string }> = ({ onClick, label }) => (
-    <button onClick={onClick} className="btn btn-secondary mb-5">
-      <ArrowLeft size={18} />
-      {label}
-    </button>
+    <div className="mb-5">
+      <button onClick={onClick} className="btn btn-secondary">
+        <ArrowLeft size={18} />
+        {label}
+      </button>
+    </div>
   );
 
   // ─────────────────────────────────────────────────────
@@ -393,13 +395,13 @@ export const CategoryView: React.FC<CategoryViewProps> = ({ products }) => {
       <div className="max-w-5xl mx-auto px-4 md:px-6 py-5 md:py-6">
         <BackBtn onClick={() => setSelectedCategory(null)} label="カテゴリー選択に戻る" />
 
-        <Breadcrumb items={[{ label: selectedCategory }]} />
-
-        <div className="mb-5 flex items-center gap-3">
-          <CategoryTag category={selectedCategory} />
-          <h2 className="page-title md:page-title-desk">{selectedCategory}</h2>
+        <div className="mb-5">
+          <div className="flex items-center gap-3 mb-1">
+            <CategoryTag category={selectedCategory} />
+            <h2 className="page-title md:page-title-desk">{selectedCategory}</h2>
+          </div>
+          <p className="text-sm text-stone-500">小分類を選択してください</p>
         </div>
-        <p className="text-sm text-stone-500 -mt-3 mb-5">小分類を選択してください</p>
 
         {subCategories.length > 0 ? (
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
