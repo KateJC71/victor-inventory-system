@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Product } from '../types';
 import { CategoryTag } from './CategoryTag';
 import { StockPill } from './StockPill';
@@ -18,6 +18,9 @@ interface ProductCardProps {
 export const ProductCard: React.FC<ProductCardProps> = ({ product, variant = 'row', onClick }) => {
   const isOut = product.stock <= 0;
   const phLabel = product.sku.split(/[-\s]/)[0].slice(0, 7);
+  // Track if the image failed to load so we can fall back to the placeholder
+  const [imgFailed, setImgFailed] = useState(false);
+  const showImage = !!product.imageUrl && !imgFailed;
 
   // Interaction props applied to the outer <article> when card is clickable
   const interactionProps = onClick
@@ -58,13 +61,16 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, variant = 'ro
       <article className={`vi-card overflow-hidden max-w-4xl mx-auto ${isOut ? 'vi-card-out' : ''}`}>
         <div className="grid md:grid-cols-2">
           {/* Image panel — always object-contain so tall racket photos show fully */}
-          <div className="bg-stone-50 flex items-center justify-center p-6 md:p-10 border-b md:border-b-0 md:border-r border-stone-200 aspect-[4/5] md:aspect-auto md:min-h-[480px] relative">
-            {product.imageUrl ? (
+          {/* Mobile: short fixed height so info is visible without scrolling
+              Desktop: matches info column height (min 480px) */}
+          <div className="bg-stone-50 flex items-center justify-center p-4 md:p-10 border-b md:border-b-0 md:border-r border-stone-200 h-64 md:h-auto md:min-h-[480px]">
+            {showImage ? (
               <img
                 src={product.imageUrl}
                 alt={product.sku}
                 className="max-w-full max-h-full object-contain"
                 loading="eager"
+                onError={() => setImgFailed(true)}
               />
             ) : (
               <div className="vi-ph w-full h-full text-2xl">{phLabel}</div>
@@ -116,12 +122,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, variant = 'ro
   if (variant === 'grid') {
     return (
       <article {...interactionProps} className={`vi-card vi-card-hover p-4 ${isOut ? 'vi-card-out' : ''}`}>
-        {product.imageUrl ? (
+        {showImage ? (
           <img
             src={product.imageUrl}
             alt={product.sku}
             className="w-full aspect-square object-contain rounded-xl mb-4 bg-stone-50"
             loading="lazy"
+            onError={() => setImgFailed(true)}
           />
         ) : (
           <div className="vi-ph w-full aspect-square mb-4">{phLabel}</div>
@@ -146,12 +153,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, variant = 'ro
   return (
     <article {...interactionProps} className={`vi-card vi-card-hover p-3 ${isOut ? 'vi-card-out' : ''}`}>
       <div className="flex gap-3.5">
-        {product.imageUrl ? (
+        {showImage ? (
           <img
             src={product.imageUrl}
             alt={product.sku}
             className="w-[104px] h-[104px] object-contain rounded-xl flex-shrink-0 bg-stone-50"
             loading="lazy"
+            onError={() => setImgFailed(true)}
           />
         ) : (
           <div className="vi-ph w-[104px] h-[104px] flex-shrink-0">{phLabel}</div>
