@@ -63,17 +63,17 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, variant = 'ro
           {/* Image panel — always object-contain so tall racket photos show fully */}
           {/* Mobile: short fixed height so info is visible without scrolling
               Desktop: matches info column height (min 480px) */}
-          <div className="bg-stone-50 flex items-center justify-center p-4 md:p-10 border-b md:border-b-0 md:border-r border-stone-200 h-64 md:h-auto md:min-h-[480px]">
+          <div className="bg-stone-50 border-b md:border-b-0 md:border-r border-stone-200 relative h-64 md:h-auto md:min-h-[480px] overflow-hidden">
             {showImage ? (
               <img
                 src={product.imageUrl}
                 alt={product.sku}
-                className="max-w-full max-h-full object-contain"
+                className="absolute inset-0 w-full h-full object-contain p-4 md:p-8"
                 loading="eager"
                 onError={() => setImgFailed(true)}
               />
             ) : (
-              <div className="vi-ph w-full h-full text-2xl">{phLabel}</div>
+              <div className="vi-ph absolute inset-0 w-full h-full text-2xl">{phLabel}</div>
             )}
           </div>
 
