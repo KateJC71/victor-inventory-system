@@ -15,6 +15,9 @@
   --brand: #CF0A2C;        /* Victor red — CTA only */
   --brand-dark: #B5081F;
 
+  /* Sticky element heights (used by BackBar to pin under nav header) */
+  --mobile-header-h: 64px;
+
   /* Stock — traffic light */
   --in-stock-bg: #D1FAE5;  --in-stock-fg: #065F46;
   --low-stock-bg: #FED7AA; --low-stock-fg: #9A3412;

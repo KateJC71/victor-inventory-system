@@ -1,9 +1,11 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { Product, CATEGORIES, CategoryType } from '../types';
 import { ProductCard } from '../components/ProductCard';
 import { CategoryTag } from '../components/CategoryTag';
 import { StockPill } from '../components/StockPill';
-import { ChevronRight, ArrowLeft } from 'lucide-react';
+import { BackBar } from '../components/BackBar';
+import { useSwipeBack } from '../hooks/useSwipeBack';
+import { ChevronRight } from 'lucide-react';
 
 interface CategoryViewProps {
   products: Product[];
@@ -157,6 +159,29 @@ export const CategoryView: React.FC<CategoryViewProps> = ({ products }) => {
     return uniqueColors.size > 1;
   }, [selectedCategory, selectedSubCategory, selectedModel, products]);
 
+  // ---- Unified back handler (used by BackBar and swipe-back gesture) ----
+  // Pops the deepest active state. Special case: when viewing a single-SKU
+  // detail (model auto-resolved to one product), back must clear the whole
+  // model→color→sku chain to return to the model list (preserves the original
+  // per-button behavior).
+  const handleBack = useCallback(() => {
+    const isSingleSku = !!(selectedModel && displayedProducts.length === 1 && selectedSku);
+    if (isSingleSku) {
+      setSelectedModel(null);
+      setSelectedColor(null);
+      setSelectedSku(null);
+      return;
+    }
+    if (selectedSku) { setSelectedSku(null); return; }
+    if (selectedColor) { setSelectedColor(null); return; }
+    if (selectedModel) { setSelectedModel(null); return; }
+    if (selectedSubCategory) { setSelectedSubCategory(null); return; }
+    if (selectedCategory) { setSelectedCategory(null); return; }
+  }, [selectedSku, selectedColor, selectedModel, selectedSubCategory, selectedCategory, displayedProducts]);
+
+  const canGoBack = !!(selectedCategory || selectedSubCategory || selectedModel || selectedColor || selectedSku);
+  useSwipeBack(handleBack, { enabled: canGoBack });
+
   // ---- Common breadcrumb ----
   const Breadcrumb: React.FC<{ items: Array<{ label: string; onClick?: () => void }> }> = ({ items }) => (
     <nav className="crumb mb-4 flex-wrap" aria-label="パンくずリスト">
@@ -173,14 +198,6 @@ export const CategoryView: React.FC<CategoryViewProps> = ({ products }) => {
     </nav>
   );
 
-  const BackBtn: React.FC<{ onClick: () => void; label: string }> = ({ onClick, label }) => (
-    <div className="mb-5">
-      <button onClick={onClick} className="btn btn-secondary">
-        <ArrowLeft size={18} />
-        {label}
-      </button>
-    </div>
-  );
 
   // ─────────────────────────────────────────────────────
   // LEVEL 6 — Single SKU detail
@@ -191,10 +208,7 @@ export const CategoryView: React.FC<CategoryViewProps> = ({ products }) => {
   if (isSingleSku && singleProduct) {
     return (
       <div className="max-w-5xl mx-auto px-4 md:px-6 py-5 md:py-6">
-        <BackBtn
-          onClick={() => { setSelectedModel(null); setSelectedColor(null); setSelectedSku(null); }}
-          label="Model選択に戻る"
-        />
+        <BackBar onBack={handleBack} label="Model選択に戻る" />
         <ProductCard product={singleProduct} variant="detail" />
       </div>
     );
@@ -217,7 +231,7 @@ export const CategoryView: React.FC<CategoryViewProps> = ({ products }) => {
 
     return (
       <div className="max-w-5xl mx-auto px-4 md:px-6 py-5 md:py-6">
-        <BackBtn onClick={handleBack} label={selectedColor ? 'カラー選択に戻る' : 'Model選択に戻る'} />
+        <BackBar onBack={handleBack} label={selectedColor ? 'カラー選択に戻る' : 'Model選択に戻る'} />
 
         <Breadcrumb items={[
           { label: selectedCategory!, onClick: () => { setSelectedSubCategory(null); setSelectedModel(null); setSelectedColor(null); setSelectedSku(null); } },
@@ -294,7 +308,7 @@ export const CategoryView: React.FC<CategoryViewProps> = ({ products }) => {
   if (selectedCategory && selectedSubCategory && selectedModel) {
     return (
       <div className="max-w-5xl mx-auto px-4 md:px-6 py-5 md:py-6">
-        <BackBtn onClick={() => setSelectedModel(null)} label="Model選択に戻る" />
+        <BackBar onBack={handleBack} label="Model選択に戻る" />
 
         <Breadcrumb items={[
           { label: selectedCategory, onClick: () => { setSelectedSubCategory(null); setSelectedModel(null); } },
@@ -342,7 +356,7 @@ export const CategoryView: React.FC<CategoryViewProps> = ({ products }) => {
   if (selectedCategory && selectedSubCategory) {
     return (
       <div className="max-w-5xl mx-auto px-4 md:px-6 py-5 md:py-6">
-        <BackBtn onClick={() => setSelectedSubCategory(null)} label="小分類選択に戻る" />
+        <BackBar onBack={handleBack} label="小分類選択に戻る" />
 
         <Breadcrumb items={[
           { label: selectedCategory, onClick: () => setSelectedSubCategory(null) },
@@ -393,7 +407,7 @@ export const CategoryView: React.FC<CategoryViewProps> = ({ products }) => {
   if (selectedCategory) {
     return (
       <div className="max-w-5xl mx-auto px-4 md:px-6 py-5 md:py-6">
-        <BackBtn onClick={() => setSelectedCategory(null)} label="カテゴリー選択に戻る" />
+        <BackBar onBack={handleBack} label="カテゴリー選択に戻る" />
 
         <div className="mb-5">
           <div className="flex items-center gap-3 mb-1">

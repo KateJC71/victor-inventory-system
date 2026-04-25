@@ -1,9 +1,11 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { Product, CATEGORIES, CategoryType } from '../types';
 import { ProductCard } from '../components/ProductCard';
 import { CategoryTag } from '../components/CategoryTag';
 import { StockPill } from '../components/StockPill';
-import { ChevronRight, ArrowLeft } from 'lucide-react';
+import { BackBar } from '../components/BackBar';
+import { useSwipeBack } from '../hooks/useSwipeBack';
+import { ChevronRight } from 'lucide-react';
 
 interface FilterSearchViewProps {
   products: Product[];
@@ -120,28 +122,23 @@ export const FilterSearchView: React.FC<FilterSearchViewProps> = ({ products }) 
     setSelectedSku(colorSkus.length === 1 ? colorSkus[0].sku : null);
   };
 
-  const handleBack = () => {
-    if (selectedColor) { setSelectedColor(null); setSelectedSku(null); }
-    else if (selectedModel) { setSelectedModel(null); setSelectedColor(null); setSelectedSku(null); }
-  };
+  const handleBack = useCallback(() => {
+    if (selectedSku) { setSelectedSku(null); return; }
+    if (selectedColor) { setSelectedColor(null); return; }
+    if (selectedModel) { setSelectedModel(null); setSelectedColor(null); return; }
+  }, [selectedSku, selectedColor, selectedModel]);
+
+  const canGoBack = !!(selectedModel || selectedColor || selectedSku);
+  useSwipeBack(handleBack, { enabled: canGoBack });
 
   const selectedProduct = selectedSku ? products.find(p => p.sku === selectedSku) : null;
-
-  const BackBtn: React.FC<{ label: string }> = ({ label }) => (
-    <div className="mb-5">
-      <button onClick={handleBack} className="btn btn-secondary">
-        <ArrowLeft size={18} />
-        {label}
-      </button>
-    </div>
-  );
 
   // ── Single SKU detail ──
   const isSingleSku = selectedModel && colorProducts.length === 1 && selectedSku;
   if (isSingleSku && selectedProduct) {
     return (
       <div className="max-w-5xl mx-auto px-4 md:px-6 py-5 md:py-6">
-        <BackBtn label={selectedColor ? 'カラー選択に戻る' : 'Model一覧に戻る'} />
+        <BackBar onBack={handleBack} label={selectedColor ? 'カラー選択に戻る' : 'Model一覧に戻る'} />
         <ProductCard product={selectedProduct} variant="detail" />
       </div>
     );
@@ -155,7 +152,7 @@ export const FilterSearchView: React.FC<FilterSearchViewProps> = ({ products }) 
 
     return (
       <div className="max-w-5xl mx-auto px-4 md:px-6 py-5 md:py-6">
-        <BackBtn label={selectedColor ? 'カラー選択に戻る' : 'Model一覧に戻る'} />
+        <BackBar onBack={handleBack} label={selectedColor ? 'カラー選択に戻る' : 'Model一覧に戻る'} />
 
         <div className="vi-card p-4 md:p-5 mb-4 flex items-center gap-4">
           {colorProducts[0]?.imageUrl ? (
@@ -223,7 +220,7 @@ export const FilterSearchView: React.FC<FilterSearchViewProps> = ({ products }) 
   if (selectedModel && hasColorVariants) {
     return (
       <div className="max-w-5xl mx-auto px-4 md:px-6 py-5 md:py-6">
-        <BackBtn label="Model一覧に戻る" />
+        <BackBar onBack={handleBack} label="Model一覧に戻る" />
 
         <div className="mb-5">
           <h2 className="page-title md:page-title-desk">{selectedModel}</h2>
