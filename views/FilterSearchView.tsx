@@ -5,6 +5,7 @@ import { CategoryTag } from '../components/CategoryTag';
 import { StockPill } from '../components/StockPill';
 import { BackBar } from '../components/BackBar';
 import { useSwipeBack } from '../hooks/useSwipeBack';
+import { stockBtnClass } from '../utils/skuDisplay';
 import { ChevronRight } from 'lucide-react';
 
 interface FilterSearchViewProps {
@@ -33,13 +34,6 @@ const sortSizes = (sizes: string[]) => {
     if (iB !== -1) return 1;
     return a.localeCompare(b);
   });
-};
-
-const stockBtnClass = (stock: number, selected: boolean) => {
-  if (selected) return 'bg-stone-900 text-white border-stone-900';
-  if (stock <= 0) return 'bg-red-50 text-red-700 border-red-200 hover:border-red-400';
-  if (stock < 5)  return 'bg-orange-50 text-orange-700 border-orange-200 hover:border-orange-400';
-  return 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:border-emerald-400';
 };
 
 export const FilterSearchView: React.FC<FilterSearchViewProps> = ({ products }) => {

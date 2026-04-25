@@ -1,9 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import { Product } from '../types';
-import { ProductCard } from '../components/ProductCard';
 import { ProductDetailModal } from '../components/ProductDetailModal';
 import { CategoryTag } from '../components/CategoryTag';
 import { StockPill, StockPillCount } from '../components/StockPill';
+import { stockBtnClass, pickSkuLabel } from '../utils/skuDisplay';
 import { ChevronDown, ChevronUp, Search, X } from 'lucide-react';
 
 interface ModelSearchViewProps {
@@ -201,12 +201,30 @@ export const ModelSearchView: React.FC<ModelSearchViewProps> = ({ products }) =>
                             <p className="text-xs text-stone-400 mt-3 text-right">数字をタップして詳細を表示</p>
                           </>
                         ) : (
-                          /* Fallback: flat SKU list (no clear color × size axes) */
-                          <div className="space-y-2">
-                            <p className="text-xs text-stone-500 mb-2 font-semibold">SKU 一覧（タップで詳細を表示）</p>
-                            {items.map(p => (
-                              <ProductCard key={p.sku} product={p} variant="row" onClick={setViewedProduct} />
-                            ))}
+                          /* No color × size matrix — show colored stock buttons
+                             with smart labels (matches CategoryView pattern). */
+                          <div>
+                            <div className="flex items-baseline justify-between mb-2.5">
+                              <p className="section-label">規格別在庫</p>
+                              <p className="text-xs text-stone-400">タップで詳細</p>
+                            </div>
+                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                              {items.map(p => {
+                                const label = pickSkuLabel(p, items);
+                                return (
+                                  <button
+                                    key={p.sku}
+                                    onClick={() => setViewedProduct(p)}
+                                    className={`p-3 rounded-xl border-2 transition-all text-center min-h-[88px] ${stockBtnClass(p.stock, false)}`}
+                                    aria-label={`${p.sku} 在庫 ${p.stock}`}
+                                  >
+                                    <div className="text-sm font-bold mb-1 truncate">{label}</div>
+                                    <div className="text-2xl font-extrabold">{p.stock}</div>
+                                    <div className="text-xs mt-1 mono opacity-70">¥{p.price.toLocaleString()}</div>
+                                  </button>
+                                );
+                              })}
+                            </div>
                           </div>
                         )}
                       </div>
