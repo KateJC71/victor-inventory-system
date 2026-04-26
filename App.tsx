@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Product, TabId, CategoryType } from './types';
 import { INITIAL_PRODUCTS } from './services/mockData';
 import { fetchProductsFromSheets, checkDataSource } from './services/dataService';
@@ -19,13 +19,6 @@ const App: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [dataSource, setDataSource] = useState<DataSource>('loading');
   const [error, setError] = useState<string | null>(null);
-
-  // Hide products with no stock from browse views (search / model / category /
-  // filter). Manage and Upload still get the full list.
-  const visibleProducts = useMemo(
-    () => products.filter(p => p.stock > 0),
-    [products]
-  );
 
   // Load data from Google Sheets or fallback
   useEffect(() => {
@@ -179,12 +172,10 @@ const App: React.FC = () => {
       <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} />
 
       <main className="flex-1 pb-tab-bar">
-        {/* Browse views: hide stock=0 items so sales staff don't see what's not available.
-            Manage / Upload still receive the full product list because the admin needs it. */}
-        {activeTab === 'single' && <SingleSearchView products={visibleProducts} />}
-        {activeTab === 'model' && <ModelSearchView products={visibleProducts} />}
-        {activeTab === 'category' && <CategoryView products={visibleProducts} />}
-        {activeTab === 'filter' && <FilterSearchView products={visibleProducts} />}
+        {activeTab === 'single' && <SingleSearchView products={products} />}
+        {activeTab === 'model' && <ModelSearchView products={products} />}
+        {activeTab === 'category' && <CategoryView products={products} />}
+        {activeTab === 'filter' && <FilterSearchView products={products} />}
         {activeTab === 'manage' && (
           <ManageView
             products={products}
@@ -207,7 +198,7 @@ const App: React.FC = () => {
         <p className="mt-1 mono">
           {dataSource === 'google-sheets' ? 'Google Sheets' :
            dataSource === 'local-storage' ? 'Local Cache' : 'Demo'}
-          {' · '}表示中 {visibleProducts.length} / 全 {products.length}
+          {' · '}商品数 {products.length}
         </p>
       </footer>
     </div>
