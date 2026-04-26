@@ -196,6 +196,10 @@ function doPost(e) {
       return handleAddProductsBatch(data.products);
     }
 
+    if (data.action === 'replaceInventory') {
+      return handleReplaceInventory(data.rows, data.token);
+    }
+
     return createResponse({ success: false, message: '不明なアクション: ' + data.action });
   } catch (error) {
     return createResponse({ success: false, message: 'エラー: ' + error.message });
@@ -442,5 +446,75 @@ function handleAddProductsBatch(products) {
     skipped: skipped,
     skippedSkus: skippedSkus,
     message: toAddMaster.length + ' 件追加しました' + (skipped > 0 ? '（' + skipped + ' 件は既存のためスキップ）' : '')
+  });
+}
+/**
+ * 完全置換 Inventory_Raw（用於每日自動更新庫存）
+ * payload: rows: Array<{sku, productName, stock, price, warehouseCode}>, token: string
+ *
+ * Token 必須跟 Script Properties 中的 AUTO_UPDATE_TOKEN 相符，
+ * 防止任意網路請求修改你的庫存資料。
+ *
+ * 行為：
+ * 1. 驗證 token
+ * 2. 清空 Inventory_Raw 第 2 列以下所有資料
+ * 3. 批次寫入新資料（A=SKU, B=商品名, C=在庫数, D=価格, E=倉庫, F=更新時刻）
+ */
+function handleReplaceInventory(rows, token) {
+  var props = PropertiesService.getScriptProperties();
+  var expected = props.getProperty('AUTO_UPDATE_TOKEN');
+  if (!expected || token !== expected) {
+    return createResponse({ success: false, message: '認証失敗' });
+  }
+
+  if (!rows || !Array.isArray(rows) || rows.length === 0) {
+    return createResponse({ success: false, message: '在庫データがありません' });
+  }
+
+  var ss = SpreadsheetApp.openById('1CSCXZNC6xJmqpfV7uEtvsYXo0mv2Ew7ZgESEyn5GVc0');
+  var invSheet = ss.getSheetByName(SHEET_NAME_INVENTORY);
+  if (!invSheet) {
+    return createResponse({ success: false, message: 'Inventory_Raw シートが見つかりません' });
+  }
+
+  // Clear existing data rows
+  var lastRow = invSheet.getLastRow();
+  if (lastRow > 1) {
+    invSheet.getRange(2, 1, lastRow - 1, invSheet.getLastColumn()).clearContent();
+  }
+
+  var now = new Date();
+  var data = rows.map(function(r) {
+    return [
+      String(r.sku || '').trim(),
+      String(r.productName || '').trim(),
+      Number(r.stock) || 0,
+      Number(r.price) || 0,
+      String(r.warehouseCode || '').trim(),
+      now
+    ];
+  }).filter(function(r) { return r[0]; });
+
+  if (data.length > 0) {
+    invSheet.getRange(2, 1, data.length, 6).setValues(data);
+  }
+
+  // Log the auto-update
+  var logSheet = ss.getSheetByName(SHEET_NAME_LOGS);
+  if (logSheet) {
+    logSheet.appendRow([
+      String(new Date().getTime()),
+      now,
+      'AUTO',
+      'auto-stock-update',
+      'Success',
+      data.length
+    ]);
+  }
+
+  return createResponse({
+    success: true,
+    rowsWritten: data.length,
+    message: data.length + ' 件の在庫を更新しました'
   });
 }

@@ -1,0 +1,35 @@
+name: 在庫自動更新
+
+# 毎朝 9:00 (JST = UTC+9) → 00:00 UTC
+# Cron syntax: minute hour day month day-of-week
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:    # 手動執行用
+
+# Single concurrent run only — if a previous run still going, skip
+concurrency:
+  group: auto-stock-update
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run auto-stock-update
+        run: node scripts/auto-stock-update.cjs
+        env:
+          FLAM_LOGIN_ID:  ${{ secrets.FLAM_LOGIN_ID }}
+          FLAM_PASSWORD:  ${{ secrets.FLAM_PASSWORD }}
+          GAS_URL:        ${{ secrets.GAS_URL }}
+          GAS_AUTO_TOKEN: ${{ secrets.GAS_AUTO_TOKEN }}
