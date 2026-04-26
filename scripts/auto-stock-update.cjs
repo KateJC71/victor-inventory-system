@@ -1,13 +1,16 @@
 /**
  * Daily auto-update script for Victor inventory.
  *
- * Logs into FLAM (https://victorsport.flam.bz/), downloads the inventory CSV,
- * parses it, and POSTs the data to the Google Apps Script Web App which
- * replaces Inventory_Raw in the spreadsheet.
+ * Uses a headless Chromium browser (Playwright) to:
+ *   1. Log into FLAM (https://victorsport.flam.bz/)
+ *   2. Navigate to the stock-export page
+ *   3. Click ダウンロード → CSV形式(.csv) to download the inventory CSV
+ * Then parses it (Shift-JIS) and POSTs the rows to the Google Apps Script
+ * Web App, which fully replaces Inventory_Raw in the spreadsheet.
  *
  * Required env vars (set as GitHub Actions secrets):
- *   FLAM_LOGIN_ID       — your FLAM account ID
- *   FLAM_PASSWORD       — your FLAM password
+ *   FLAM_LOGIN_ID       — FLAM account ID
+ *   FLAM_PASSWORD       — FLAM password
  *   GAS_URL             — Google Apps Script Web App URL
  *   GAS_AUTO_TOKEN      — shared secret matching AUTO_UPDATE_TOKEN in Apps
  *                         Script Properties (so random web traffic can't
@@ -17,6 +20,9 @@
  */
 
 'use strict';
+
+const fs = require('fs');
+const { chromium } = require('playwright');
 
 const LOGIN_URL  = 'https://victorsport.flam.bz/login';
 const EXPORT_URL = 'https://victorsport.flam.bz/stockrecents/export?sbd=&sh=&p=&pc=&pcd=&gs=1&nz=1&sn=&lt=&gsn=&gln=&sast=&exc_sd=&exc_ed=&exc_sq=&exc_sq_eq=&s_ship=&s_sale=&s_arrival=&s_purchase=&s_receiptpayschedule=&s_receiptpay=&l_return=';
@@ -31,94 +37,69 @@ const getEnv = (key) => {
   return v;
 };
 
-/** Cookie jar that survives across requests. */
-const cookies = new Map();
+/**
+ * Drive the FLAM site through Playwright to obtain the inventory CSV.
+ * Returns a Buffer of the raw (Shift-JIS) CSV bytes.
+ */
+const downloadCsvViaBrowser = async (loginId, password) => {
+  console.log('→ Launching headless Chromium...');
+  const browser = await chromium.launch({ headless: true });
 
-const setCookiesFromHeader = (setCookieHeaders) => {
-  if (!setCookieHeaders) return;
-  const list = Array.isArray(setCookieHeaders) ? setCookieHeaders : [setCookieHeaders];
-  for (const sc of list) {
-    const [pair] = sc.split(';');
-    const eq = pair.indexOf('=');
-    if (eq < 0) continue;
-    const name = pair.substring(0, eq).trim();
-    const value = pair.substring(eq + 1).trim();
-    cookies.set(name, value);
-  }
-};
+  try {
+    const context = await browser.newContext({
+      acceptDownloads: true,
+      locale: 'ja-JP',
+      userAgent: UA,
+    });
+    const page = await context.newPage();
 
-const cookieHeader = () =>
-  [...cookies.entries()].map(([k, v]) => `${k}=${v}`).join('; ');
+    console.log('→ Loading login page...');
+    await page.goto(LOGIN_URL, { waitUntil: 'domcontentloaded' });
 
-/** fetch() wrapper that maintains cookies and sets a real UA. */
-const httpFetch = async (url, options = {}) => {
-  const headers = {
-    'User-Agent': UA,
-    'Accept': '*/*',
-    'Accept-Language': 'ja,en;q=0.9',
-    ...(options.headers || {}),
-  };
-  if (cookies.size > 0) headers.Cookie = cookieHeader();
-  const res = await fetch(url, { ...options, headers, redirect: 'manual' });
-  // Capture set-cookie (Node 18+ exposes via getSetCookie)
-  const sc = typeof res.headers.getSetCookie === 'function'
-    ? res.headers.getSetCookie()
-    : res.headers.raw?.()['set-cookie'];
-  setCookiesFromHeader(sc);
-  return res;
-};
+    console.log('→ Filling login form...');
+    await page.fill('input[name="data[User][loginid]"]', loginId);
+    await page.fill('input[name="data[User][password]"]', password);
 
-/** Follow redirects manually so we keep cookies on each hop. */
-const fetchFollow = async (url, options = {}, maxHops = 8) => {
-  let current = url;
-  let opts = { ...options };
-  for (let i = 0; i < maxHops; i++) {
-    const res = await httpFetch(current, opts);
-    if (res.status >= 300 && res.status < 400) {
-      const loc = res.headers.get('location');
-      if (!loc) return res;
-      current = new URL(loc, current).toString();
-      opts = { method: 'GET' };  // redirect always becomes GET
-      continue;
+    console.log('→ Submitting credentials...');
+    await Promise.all([
+      page.waitForLoadState('domcontentloaded'),
+      page.click('input[type="submit"], button[type="submit"]'),
+    ]);
+
+    if (await page.locator('input[name="data[User][loginid]"]').count() > 0) {
+      die('Login failed — credentials rejected');
     }
-    return res;
-  }
-  throw new Error('Too many redirects');
-};
+    console.log('✓ Logged in');
 
-const login = async (loginId, password) => {
-  console.log('→ Loading login page...');
-  await fetchFollow(LOGIN_URL);
+    console.log('→ Opening export page...');
+    await page.goto(EXPORT_URL, { waitUntil: 'domcontentloaded' });
 
-  console.log('→ POST credentials...');
-  const body = new URLSearchParams({
-    'data[User][loginid]': loginId,
-    'data[User][password]': password,
-  });
-  const res = await fetchFollow(LOGIN_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: body.toString(),
-  });
-  // After login the site usually redirects to the home page (200).
-  if (res.status !== 200) {
-    die(`Login failed (HTTP ${res.status})`);
-  }
-  // Heuristic: if response still contains the login form, creds were rejected.
-  const html = await res.text();
-  if (html.includes('name="data[User][loginid]"') && html.includes('FLAMアカウントID')) {
-    die('Login failed — credentials rejected');
-  }
-  console.log('✓ Logged in');
-};
+    console.log('→ Clicking ダウンロード button...');
+    // The page has a button labelled ダウンロード that toggles a dropdown.
+    await page.getByRole('button', { name: /ダウンロード/ }).first().click()
+      .catch(async () => {
+        // Fallback: click any element containing ダウンロード text.
+        await page.locator(':text("ダウンロード")').first().click();
+      });
 
-const downloadCsv = async () => {
-  console.log('→ Downloading CSV...');
-  const res = await fetchFollow(EXPORT_URL);
-  if (res.status !== 200) die(`CSV download failed (HTTP ${res.status})`);
-  const buf = Buffer.from(await res.arrayBuffer());
-  console.log(`✓ Downloaded ${buf.length} bytes`);
-  return buf;
+    console.log('→ Waiting for CSV format option...');
+    const csvLink = page.locator(':text("CSV形式")').first();
+    await csvLink.waitFor({ state: 'visible', timeout: 10000 });
+
+    console.log('→ Triggering CSV download...');
+    const [download] = await Promise.all([
+      page.waitForEvent('download', { timeout: 30000 }),
+      csvLink.click(),
+    ]);
+
+    const downloadPath = await download.path();
+    if (!downloadPath) die('Download did not produce a file');
+    const buf = fs.readFileSync(downloadPath);
+    console.log(`✓ Downloaded ${buf.length} bytes (${download.suggestedFilename()})`);
+    return buf;
+  } finally {
+    await browser.close();
+  }
 };
 
 /** Parse a CSV line, returning the cell values (handles quoted commas). */
@@ -193,8 +174,7 @@ const postToGas = async (rows) => {
 (async () => {
   const loginId = getEnv('FLAM_LOGIN_ID');
   const password = getEnv('FLAM_PASSWORD');
-  await login(loginId, password);
-  const buf = await downloadCsv();
+  const buf = await downloadCsvViaBrowser(loginId, password);
   const rows = parseInventoryCsv(buf);
   console.log(`Parsed ${rows.length} unique SKUs`);
   if (rows.length === 0) die('No SKUs in CSV');
