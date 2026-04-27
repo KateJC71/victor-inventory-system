@@ -52,3 +52,14 @@ jobs:
           FLAM_PASSWORD:  ${{ secrets.FLAM_PASSWORD }}
           GAS_URL:        ${{ secrets.GAS_URL }}
           GAS_AUTO_TOKEN: ${{ secrets.GAS_AUTO_TOKEN }}
+
+      - name: Upload failure debug artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: flam-failure-debug
+          path: |
+            flam-failure.png
+            flam-failure.html
+          if-no-files-found: ignore
+          retention-days: 7

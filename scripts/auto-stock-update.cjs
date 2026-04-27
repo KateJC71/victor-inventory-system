@@ -44,6 +44,7 @@ const getEnv = (key) => {
 const downloadCsvViaBrowser = async (loginId, password) => {
   console.log('→ Launching headless Chromium...');
   const browser = await chromium.launch({ headless: true });
+  let page;
 
   try {
     const context = await browser.newContext({
@@ -51,7 +52,7 @@ const downloadCsvViaBrowser = async (loginId, password) => {
       locale: 'ja-JP',
       userAgent: UA,
     });
-    const page = await context.newPage();
+    page = await context.newPage();
 
     console.log('→ Loading login page...');
     await page.goto(LOGIN_URL, { waitUntil: 'domcontentloaded' });
@@ -73,17 +74,42 @@ const downloadCsvViaBrowser = async (loginId, password) => {
 
     console.log('→ Opening export page...');
     await page.goto(EXPORT_URL, { waitUntil: 'domcontentloaded' });
+    // Some FLAM pages render bits of UI lazily — give it a beat.
+    await page.waitForLoadState('networkidle').catch(() => {});
 
-    console.log('→ Clicking ダウンロード button...');
-    // The page has a button labelled ダウンロード that toggles a dropdown.
-    await page.getByRole('button', { name: /ダウンロード/ }).first().click()
-      .catch(async () => {
-        // Fallback: click any element containing ダウンロード text.
-        await page.locator(':text("ダウンロード")').first().click();
-      });
+    console.log('→ Locating ダウンロード button...');
+    // Try several specific selectors before falling back to substring text.
+    const buttonCandidates = [
+      'button.dropdown-toggle:has-text("ダウンロード")',
+      'a.dropdown-toggle:has-text("ダウンロード")',
+      'button:has-text("ダウンロード"):not(:has(*))', // leaf button only
+      'a:has-text("ダウンロード"):not(:has(*))',
+      'input[type="button"][value*="ダウンロード"]',
+      'input[type="submit"][value*="ダウンロード"]',
+      'button:has-text("ダウンロード")',
+      'a:has-text("ダウンロード")',
+    ];
+
+    let clicked = false;
+    for (const sel of buttonCandidates) {
+      const loc = page.locator(sel).first();
+      if (await loc.count() > 0) {
+        console.log(`  using selector: ${sel}`);
+        await loc.click();
+        clicked = true;
+        break;
+      }
+    }
+    if (!clicked) {
+      die('Could not locate ダウンロード button');
+    }
+
+    // Give dropdown animation/JS a moment.
+    await page.waitForTimeout(800);
 
     console.log('→ Waiting for CSV format option...');
-    const csvLink = page.locator(':text("CSV形式")').first();
+    // Match either "CSV形式" alone or "CSV形式(.csv)" — case-insensitive.
+    const csvLink = page.locator('a, button, li').filter({ hasText: /CSV形式/ }).first();
     await csvLink.waitFor({ state: 'visible', timeout: 10000 });
 
     console.log('→ Triggering CSV download...');
@@ -97,6 +123,16 @@ const downloadCsvViaBrowser = async (loginId, password) => {
     const buf = fs.readFileSync(downloadPath);
     console.log(`✓ Downloaded ${buf.length} bytes (${download.suggestedFilename()})`);
     return buf;
+  } catch (err) {
+    // Dump page state so we can diagnose CI failures.
+    if (page) {
+      try {
+        await page.screenshot({ path: 'flam-failure.png', fullPage: true });
+        fs.writeFileSync('flam-failure.html', await page.content());
+        console.error('Saved flam-failure.png and flam-failure.html for debugging');
+      } catch (_) { /* ignore secondary failures */ }
+    }
+    throw err;
   } finally {
     await browser.close();
   }
