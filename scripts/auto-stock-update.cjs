@@ -77,45 +77,28 @@ const downloadCsvViaBrowser = async (loginId, password) => {
     // Some FLAM pages render bits of UI lazily — give it a beat.
     await page.waitForLoadState('networkidle').catch(() => {});
 
-    console.log('→ Locating ダウンロード button...');
-    // Try several specific selectors before falling back to substring text.
-    const buttonCandidates = [
-      'button.dropdown-toggle:has-text("ダウンロード")',
-      'a.dropdown-toggle:has-text("ダウンロード")',
-      'button:has-text("ダウンロード"):not(:has(*))', // leaf button only
-      'a:has-text("ダウンロード"):not(:has(*))',
-      'input[type="button"][value*="ダウンロード"]',
-      'input[type="submit"][value*="ダウンロード"]',
-      'button:has-text("ダウンロード")',
-      'a:has-text("ダウンロード")',
-    ];
+    console.log('→ Navigating to download page via ダウンロード tab...');
+    // The top-nav ダウンロード is a link/anchor that navigates to the
+    // download-format page (在庫数一覧ダウンロード).
+    await page.locator('a:has-text("ダウンロード")').first().click();
+    await page.waitForLoadState('domcontentloaded').catch(() => {});
+    await page.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => {});
 
-    let clicked = false;
-    for (const sel of buttonCandidates) {
-      const loc = page.locator(sel).first();
-      if (await loc.count() > 0) {
-        console.log(`  using selector: ${sel}`);
-        await loc.click();
-        clicked = true;
-        break;
-      }
-    }
-    if (!clicked) {
-      die('Could not locate ダウンロード button');
-    }
+    console.log('→ Locating CSV format link in DOM...');
+    // The CSV link lives in <li class="additional dl_format_list"> which is
+    // CSS-hidden until the dropdown is opened. We don't need it visible —
+    // a native el.click() works on attached DOM nodes regardless of CSS.
+    const csvLink = page.locator('a').filter({ hasText: /CSV形式/ }).first();
+    await csvLink.waitFor({ state: 'attached', timeout: 10000 });
 
-    // Give dropdown animation/JS a moment.
-    await page.waitForTimeout(800);
-
-    console.log('→ Waiting for CSV format option...');
-    // Match either "CSV形式" alone or "CSV形式(.csv)" — case-insensitive.
-    const csvLink = page.locator('a, button, li').filter({ hasText: /CSV形式/ }).first();
-    await csvLink.waitFor({ state: 'visible', timeout: 10000 });
+    const csvHref = await csvLink.getAttribute('href');
+    console.log(`  CSV link href: ${csvHref}`);
 
     console.log('→ Triggering CSV download...');
     const [download] = await Promise.all([
       page.waitForEvent('download', { timeout: 30000 }),
-      csvLink.click(),
+      // Native DOM click bypasses Playwright's visibility/actionability checks.
+      csvLink.evaluate((el) => el.click()),
     ]);
 
     const downloadPath = await download.path();
