@@ -39,16 +39,23 @@ const sortSizes = (sizes: string[]) => {
 export const FilterSearchView: React.FC<FilterSearchViewProps> = ({ products }) => {
   const [selectedCategory, setSelectedCategory] = useState<CategoryType | '全部'>('全部');
   const [selectedPriceRange, setSelectedPriceRange] = useState(0);
+  const [inStockOnly, setInStockOnly] = useState(false);
   const [selectedModel, setSelectedModel] = useState<string | null>(null);
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
   const [selectedSku, setSelectedSku] = useState<string | null>(null);
+
+  const resetDrilldown = () => {
+    setSelectedModel(null); setSelectedColor(null); setSelectedSku(null);
+  };
 
   const filteredProducts = useMemo(() => {
     let result = products;
     if (selectedCategory !== '全部') result = result.filter(p => p.category === selectedCategory);
     const r = PRICE_RANGES[selectedPriceRange];
-    return result.filter(p => p.price >= r.min && p.price < r.max);
-  }, [products, selectedCategory, selectedPriceRange]);
+    result = result.filter(p => p.price >= r.min && p.price < r.max);
+    if (inStockOnly) result = result.filter(p => p.stock > 0);
+    return result;
+  }, [products, selectedCategory, selectedPriceRange, inStockOnly]);
 
   const models = useMemo(() => {
     const groups: Record<string, { count: number; totalStock: number; image: string; category: CategoryType; minPrice: number }> = {};
@@ -66,11 +73,12 @@ export const FilterSearchView: React.FC<FilterSearchViewProps> = ({ products }) 
 
   const categoryCounts = useMemo(() => {
     const r = PRICE_RANGES[selectedPriceRange];
-    const priceFiltered = products.filter(p => p.price >= r.min && p.price < r.max);
-    const counts: Record<string, number> = { '全部': priceFiltered.length };
-    CATEGORIES.forEach(c => { counts[c] = priceFiltered.filter(p => p.category === c).length; });
+    let pool = products.filter(p => p.price >= r.min && p.price < r.max);
+    if (inStockOnly) pool = pool.filter(p => p.stock > 0);
+    const counts: Record<string, number> = { '全部': pool.length };
+    CATEGORIES.forEach(c => { counts[c] = pool.filter(p => p.category === c).length; });
     return counts;
-  }, [products, selectedPriceRange]);
+  }, [products, selectedPriceRange, inStockOnly]);
 
   const modelProducts = useMemo(() => {
     if (!selectedModel) return [];
@@ -253,26 +261,29 @@ export const FilterSearchView: React.FC<FilterSearchViewProps> = ({ products }) 
   return (
     <div className="max-w-5xl mx-auto px-4 md:px-6 py-5 md:py-6">
       <h2 className="page-title md:page-title-desk mb-1">条件で絞り込み</h2>
-      <p className="text-sm text-stone-500 mb-5">価格帯とカテゴリーで商品を探せます</p>
+      <p className="text-sm text-stone-500 mb-5">カテゴリー、価格帯、在庫で商品を探せます</p>
 
       {/* Filters */}
       <div className="vi-card p-4 md:p-5 mb-5 space-y-5">
         <div>
-          <label className="label" htmlFor="filter-cat">カテゴリー</label>
-          <select
-            id="filter-cat"
-            value={selectedCategory}
-            onChange={(e) => {
-              setSelectedCategory(e.target.value as CategoryType | '全部');
-              setSelectedModel(null); setSelectedColor(null); setSelectedSku(null);
-            }}
-            className="field"
-          >
-            <option value="全部">全部 ({categoryCounts['全部']})</option>
+          <div className="label">カテゴリー</div>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+            <button
+              onClick={() => { setSelectedCategory('全部'); resetDrilldown(); }}
+              className={`chip justify-center ${selectedCategory === '全部' ? 'chip-active' : ''}`}
+            >
+              全部 ({categoryCounts['全部']})
+            </button>
             {CATEGORIES.map(c => (
-              <option key={c} value={c}>{c} ({categoryCounts[c]})</option>
+              <button
+                key={c}
+                onClick={() => { setSelectedCategory(c); resetDrilldown(); }}
+                className={`chip justify-center ${selectedCategory === c ? 'chip-active' : ''}`}
+              >
+                {c} ({categoryCounts[c]})
+              </button>
             ))}
-          </select>
+          </div>
         </div>
 
         <div>
@@ -281,15 +292,30 @@ export const FilterSearchView: React.FC<FilterSearchViewProps> = ({ products }) 
             {PRICE_RANGES.map((range, idx) => (
               <button
                 key={idx}
-                onClick={() => {
-                  setSelectedPriceRange(idx);
-                  setSelectedModel(null); setSelectedColor(null); setSelectedSku(null);
-                }}
+                onClick={() => { setSelectedPriceRange(idx); resetDrilldown(); }}
                 className={`chip justify-center ${selectedPriceRange === idx ? 'chip-active' : ''}`}
               >
                 {range.label}
               </button>
             ))}
+          </div>
+        </div>
+
+        <div>
+          <div className="label">在庫</div>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              onClick={() => { setInStockOnly(false); resetDrilldown(); }}
+              className={`chip justify-center ${!inStockOnly ? 'chip-active' : ''}`}
+            >
+              全部
+            </button>
+            <button
+              onClick={() => { setInStockOnly(true); resetDrilldown(); }}
+              className={`chip justify-center ${inStockOnly ? 'chip-active' : ''}`}
+            >
+              在庫あり
+            </button>
           </div>
         </div>
       </div>
