@@ -223,7 +223,7 @@ export const ManageView: React.FC<ManageViewProps> = ({ products, onAddProduct, 
       {activeSubTab === 'add' && <AddProductForm products={products} onAdd={onAddProduct} />}
       {activeSubTab === 'bulk' && <BulkImportForm products={products} onAdd={onAddProduct} />}
       {activeSubTab === 'batchImage' && <BatchImageUpload products={products} onUpdateImages={onUpdateImages} />}
-      {activeSubTab === 'edit' && <ProductEditForm products={products} onUpdateProduct={onUpdateProduct} />}
+      {activeSubTab === 'edit' && <ProductEditForm products={products} onUpdateProduct={onUpdateProduct} onUpdateImages={onUpdateImages} />}
       {activeSubTab === 'structure' && <CategoryStructureEditor products={products} onUpdate={onUpdateSubCategory} onDelete={onDeleteSubCategory} />}
     </div>
   );
@@ -1091,7 +1091,8 @@ const CategoryStructureEditor: React.FC<{
 
 interface BatchImageItem {
   file: File;
-  sku: string | null;
+  skus: string[];                        // 對到的 SKU（型番比對時可能多個）
+  matchType: 'sku' | 'model' | 'none';   // 比對方式
   status: 'ready' | 'unmatched' | 'uploading' | 'done' | 'error';
   imageUrl?: string;
   message?: string;
@@ -1115,6 +1116,19 @@ const BatchImageUpload: React.FC<{
     return map;
   }, [products]);
 
+  // 型番對照表（大寫型番 → 該型番的所有 SKU）
+  const modelMap = useMemo(() => {
+    const map = new Map<string, string[]>();
+    products.forEach(p => {
+      const key = (p.modelName || '').trim().toUpperCase();
+      if (!key) return;
+      const list = map.get(key) || [];
+      list.push(p.sku);
+      map.set(key, list);
+    });
+    return map;
+  }, [products]);
+
   const handleFiles = (files: FileList | null) => {
     if (!files || files.length === 0) return;
     setResultMessage(null);
@@ -1122,9 +1136,21 @@ const BatchImageUpload: React.FC<{
     const list: BatchImageItem[] = Array.from(files)
       .filter(f => f.type.startsWith('image/'))
       .map(file => {
-        const baseName = file.name.replace(/\.[^.]+$/, '').trim();
-        const sku = skuMap.get(baseName.toUpperCase()) || null;
-        return { file, sku, status: sku ? ('ready' as const) : ('unmatched' as const) };
+        const baseName = file.name.replace(/\.[^.]+$/, '').trim().toUpperCase();
+
+        // 1. 先用 SKU 完全比對
+        const skuHit = skuMap.get(baseName);
+        if (skuHit) {
+          return { file, skus: [skuHit], matchType: 'sku' as const, status: 'ready' as const };
+        }
+
+        // 2. 再用型番比對 → 套用到該型番的所有 SKU（如 3U / 4U 共用同一張圖）
+        const modelHit = modelMap.get(baseName);
+        if (modelHit && modelHit.length > 0) {
+          return { file, skus: modelHit, matchType: 'model' as const, status: 'ready' as const };
+        }
+
+        return { file, skus: [], matchType: 'none' as const, status: 'unmatched' as const };
       });
     setItems(list);
   };
@@ -1138,15 +1164,15 @@ const BatchImageUpload: React.FC<{
     setResultMessage(null);
     setResultError(null);
 
-    // 1. 逐張上傳到 Cloudinary
+    // 1. 逐張上傳到 Cloudinary（一張圖可能對應多個 SKU）
     const uploaded: Array<{ sku: string; imageUrl: string }> = [];
     for (let i = 0; i < items.length; i++) {
       const item = items[i];
-      if (!item.sku || item.status === 'done') continue;
+      if (item.skus.length === 0 || item.status === 'done') continue;
       updateItem(i, { status: 'uploading' });
       try {
         const url = await uploadImageToCloudinary(item.file);
-        uploaded.push({ sku: item.sku, imageUrl: url });
+        item.skus.forEach(sku => uploaded.push({ sku, imageUrl: url }));
         updateItem(i, { status: 'done', imageUrl: url });
       } catch (err) {
         updateItem(i, { status: 'error', message: err instanceof Error ? err.message : 'アップロード失敗' });
@@ -1197,8 +1223,9 @@ const BatchImageUpload: React.FC<{
           画像一括アップロード
         </h3>
         <p className="text-xs text-stone-500 mt-1">
-          ファイル名を SKU にした画像を複数選択してください（例: A170JR-AB180.jpg）。
-          選択後、SKU との照合結果を確認してからアップロードできます。
+          ファイル名を <span className="font-bold">SKU</span> または <span className="font-bold">型番（Model）</span>にした画像を複数選択してください
+          （例: A170JR-AB180.jpg / TK-F-C-ULTRA.jpg）。
+          型番の場合、同じ型番のすべての SKU（3U / 4U など）に同じ画像が適用されます。
         </p>
       </div>
 
@@ -1250,10 +1277,19 @@ const BatchImageUpload: React.FC<{
               <div key={i} className="px-3 py-2 text-xs flex items-center gap-2">
                 {statusIcon(item)}
                 <span className="text-stone-700 truncate flex-1">{item.file.name}</span>
-                {item.sku ? (
-                  <span className="text-stone-400 font-mono shrink-0">{item.sku}</span>
-                ) : (
-                  <span className="text-amber-600 shrink-0">SKU が見つかりません</span>
+                {item.matchType === 'sku' && (
+                  <span className="text-stone-400 font-mono shrink-0">{item.skus[0]}</span>
+                )}
+                {item.matchType === 'model' && (
+                  <span
+                    className="text-stone-500 shrink-0 bg-stone-100 rounded-full px-2 py-0.5"
+                    title={item.skus.join(', ')}
+                  >
+                    型番一致 → {item.skus.length} SKU
+                  </span>
+                )}
+                {item.matchType === 'none' && (
+                  <span className="text-amber-600 shrink-0">SKU / 型番が見つかりません</span>
                 )}
                 {item.status === 'error' && item.message && (
                   <span className="text-red-500 shrink-0 max-w-[10rem] truncate" title={item.message}>{item.message}</span>
@@ -1309,7 +1345,8 @@ const BatchImageUpload: React.FC<{
 const ProductEditForm: React.FC<{
   products: Product[];
   onUpdateProduct: (p: Product) => void;
-}> = ({ products, onUpdateProduct }) => {
+  onUpdateImages: (urlBySku: Map<string, string>) => void;
+}> = ({ products, onUpdateProduct, onUpdateImages }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selected, setSelected] = useState<Product | null>(null);
   const [form, setForm] = useState({
@@ -1326,6 +1363,7 @@ const ProductEditForm: React.FC<{
   const [saving, setSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [applyToSiblings, setApplyToSiblings] = useState<Set<string>>(new Set());
 
   const searchResults = useMemo(() => {
     const term = searchTerm.trim().toLowerCase();
@@ -1334,6 +1372,16 @@ const ProductEditForm: React.FC<{
       .filter(p => p.sku.toLowerCase().includes(term) || p.name.toLowerCase().includes(term) || p.modelName.toLowerCase().includes(term))
       .slice(0, 10);
   }, [products, searchTerm]);
+
+  // 同型番的其他 SKU（3U / 4U 等，可共用同一張圖）
+  const siblingProducts = useMemo(() => {
+    if (!selected) return [];
+    const model = (selected.modelName || '').trim().toUpperCase();
+    if (!model) return [];
+    return products.filter(
+      p => p.sku !== selected.sku && (p.modelName || '').trim().toUpperCase() === model
+    );
+  }, [products, selected]);
 
   const existingSubCategories = useMemo(() => {
     const subs = new Set<string>();
@@ -1358,8 +1406,18 @@ const ProductEditForm: React.FC<{
       gripSize: p.gripSize || '',
       imageUrl: p.imageUrl || '',
     });
+    setApplyToSiblings(new Set());
     setSaveMessage(null);
     setSaveError(null);
+  };
+
+  const toggleSibling = (sku: string) => {
+    setApplyToSiblings(prev => {
+      const next = new Set(prev);
+      if (next.has(sku)) next.delete(sku);
+      else next.add(sku);
+      return next;
+    });
   };
 
   const handleFieldChange = (field: keyof typeof form, value: string) => {
@@ -1398,7 +1456,18 @@ const ProductEditForm: React.FC<{
         gripSize: form.gripSize,
         imageUrl: form.imageUrl,
       });
-      setSaveMessage(result.message);
+
+      // 勾選的同型番 SKU 也套用同一張圖
+      let siblingNote = '';
+      const applyList: string[] = Array.from(applyToSiblings);
+      const imageUrlToApply: string = form.imageUrl;
+      if (applyList.length > 0 && imageUrlToApply) {
+        await updateProductImages(applyList.map(sku => ({ sku, imageUrl: imageUrlToApply })));
+        onUpdateImages(new Map(applyList.map(sku => [sku, imageUrlToApply])));
+        siblingNote = `（画像を他 ${applyList.length} 件のSKUにも適用）`;
+      }
+
+      setSaveMessage(result.message + siblingNote);
     } catch (err) {
       setSaveError(err instanceof Error ? err.message : '保存に失敗しました');
     } finally {
@@ -1571,6 +1640,52 @@ const ProductEditForm: React.FC<{
             value={form.imageUrl}
             onChange={url => handleFieldChange('imageUrl', url)}
           />
+
+          {/* 同型番的其他 SKU 可勾選一併套用同一張圖（如 3U / 4U 共用） */}
+          {siblingProducts.length > 0 && (
+            <div className="border border-stone-200 rounded-lg p-3 space-y-2">
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-bold text-stone-500">
+                  この画像を同じ型番の他の SKU にも適用：
+                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setApplyToSiblings(prev =>
+                      prev.size === siblingProducts.length
+                        ? new Set()
+                        : new Set(siblingProducts.map(p => p.sku))
+                    );
+                  }}
+                  className="text-xs text-stone-500 hover:text-stone-700 underline"
+                >
+                  {applyToSiblings.size === siblingProducts.length ? '全て解除' : '全て選択'}
+                </button>
+              </div>
+              <div className="space-y-1 max-h-40 overflow-y-auto">
+                {siblingProducts.map(p => (
+                  <label
+                    key={p.sku}
+                    className="flex items-center gap-2 text-xs text-stone-700 py-1 px-2 rounded hover:bg-stone-50 cursor-pointer"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={applyToSiblings.has(p.sku)}
+                      onChange={() => toggleSibling(p.sku)}
+                      className="accent-stone-900"
+                    />
+                    <span className="font-mono">{p.sku}</span>
+                    <span className="text-stone-400 truncate">
+                      {[p.weightClass, p.gripSize, p.color, p.size].filter(Boolean).join(' / ')}
+                    </span>
+                  </label>
+                ))}
+              </div>
+              {!form.imageUrl && applyToSiblings.size > 0 && (
+                <p className="text-xs text-amber-600">※ 画像が設定されていないため、チェックは保存時に無視されます</p>
+              )}
+            </div>
+          )}
 
           {saveMessage && (
             <p className="text-center text-green-700 text-sm font-medium bg-green-50 border border-green-100 rounded-lg py-2">
