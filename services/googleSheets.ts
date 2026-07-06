@@ -241,6 +241,87 @@ export async function writeProductsBatch(
 }
 
 /**
+ * 更新既存商品（依 SKU 定位，只更新有提供的欄位）
+ */
+export interface UpdateProductFields {
+  category?: string;
+  masterName?: string;
+  subCategory?: string;
+  modelName?: string;
+  gender?: string;
+  colorCode?: string;
+  color?: string;
+  size?: string;
+  weightClass?: string;
+  gripSize?: string;
+  remarks?: string;
+  imageUrl?: string;
+}
+
+export async function updateProductInSheet(
+  sku: string,
+  fields: UpdateProductFields
+): Promise<{ success: boolean; message: string }> {
+  if (!APPS_SCRIPT_URL) {
+    throw new Error('Google Apps Script URL が設定されていません（VITE_GOOGLE_APPS_SCRIPT_URL）');
+  }
+
+  const response = await fetch(APPS_SCRIPT_URL, {
+    method: 'POST',
+    body: JSON.stringify({ action: 'updateProduct', sku, fields }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`更新に失敗しました (${response.status})`);
+  }
+
+  const result = await response.json();
+
+  if (!result.success) {
+    throw new Error(result.message || '更新に失敗しました');
+  }
+
+  return {
+    success: true,
+    message: result.message || '商品を更新しました',
+  };
+}
+
+/**
+ * 批次更新商品圖片 URL（画像一括アップロード用）
+ * 圖片先上傳到 Cloudinary，再把 URL 一次寫回 Product_Master M 欄
+ */
+export async function updateProductImages(
+  items: Array<{ sku: string; imageUrl: string }>
+): Promise<{ success: boolean; updated: number; notFound: string[]; message: string }> {
+  if (!APPS_SCRIPT_URL) {
+    throw new Error('Google Apps Script URL が設定されていません（VITE_GOOGLE_APPS_SCRIPT_URL）');
+  }
+
+  const response = await fetch(APPS_SCRIPT_URL, {
+    method: 'POST',
+    body: JSON.stringify({ action: 'updateImages', items }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`画像URLの書き込みに失敗しました (${response.status})`);
+  }
+
+  const result = await response.json();
+
+  if (!result.success) {
+    throw new Error(result.message || '画像URLの書き込みに失敗しました');
+  }
+
+  return {
+    success: true,
+    updated: result.updated || 0,
+    notFound: result.notFound || [],
+    message: result.message || '',
+  };
+}
+
+/**
  * 上傳圖片到 Cloudinary（使用 unsigned upload preset）
  * 需要先在 Vercel 設定 VITE_CLOUDINARY_UPLOAD_PRESET 環境變數
  */

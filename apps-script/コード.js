@@ -200,6 +200,14 @@ function doPost(e) {
       return handleReplaceInventory(data.rows, data.token);
     }
 
+    if (data.action === 'updateProduct') {
+      return handleUpdateProduct(data.sku, data.fields);
+    }
+
+    if (data.action === 'updateImages') {
+      return handleUpdateImages(data.items);
+    }
+
     return createResponse({ success: false, message: '不明なアクション: ' + data.action });
   } catch (error) {
     return createResponse({ success: false, message: 'エラー: ' + error.message });
@@ -448,6 +456,131 @@ function handleAddProductsBatch(products) {
     message: toAddMaster.length + ' 件追加しました' + (skipped > 0 ? '（' + skipped + ' 件は既存のためスキップ）' : '')
   });
 }
+/**
+ * 更新既存商品（依 SKU 定位 Product_Master 該列，只更新有提供的欄位）
+ * payload: sku: string, fields: { category?, masterName?, subCategory?, modelName?,
+ *          gender?, colorCode?, color?, size?, weightClass?, gripSize?, remarks?, imageUrl? }
+ */
+function handleUpdateProduct(sku, fields) {
+  sku = String(sku || '').trim();
+  if (!sku) {
+    return createResponse({ success: false, message: 'SKU が必要です' });
+  }
+  if (!fields || typeof fields !== 'object') {
+    return createResponse({ success: false, message: '更新データがありません' });
+  }
+
+  var ss = SpreadsheetApp.openById('1CSCXZNC6xJmqpfV7uEtvsYXo0mv2Ew7ZgESEyn5GVc0');
+  var masterSheet = ss.getSheetByName(SHEET_NAME_MASTER);
+  if (!masterSheet) {
+    return createResponse({ success: false, message: 'Product_Master シートが見つかりません' });
+  }
+
+  // 找出該 SKU 所在列
+  var lastRow = masterSheet.getLastRow();
+  var rowIndex = -1;
+  if (lastRow > 1) {
+    var skuRange = masterSheet.getRange(2, 1, lastRow - 1, 1).getValues();
+    var skuUpper = sku.toUpperCase();
+    for (var i = 0; i < skuRange.length; i++) {
+      if (String(skuRange[i][0]).trim().toUpperCase() === skuUpper) {
+        rowIndex = i + 2;
+        break;
+      }
+    }
+  }
+  if (rowIndex === -1) {
+    return createResponse({ success: false, message: 'SKU「' + sku + '」が見つかりません' });
+  }
+
+  // 欄位 → Product_Master 欄號（A=1 SKU は更新対象外）
+  var columnMap = {
+    category: 2,     // B
+    masterName: 3,   // C
+    subCategory: 4,  // D
+    modelName: 5,    // E
+    gender: 6,       // F
+    colorCode: 7,    // G
+    color: 8,        // H
+    size: 9,         // I
+    weightClass: 10, // J
+    gripSize: 11,    // K
+    remarks: 12,     // L
+    imageUrl: 13     // M
+  };
+
+  var updatedCount = 0;
+  for (var key in columnMap) {
+    if (fields[key] !== undefined && fields[key] !== null) {
+      masterSheet.getRange(rowIndex, columnMap[key]).setValue(String(fields[key]));
+      updatedCount++;
+    }
+  }
+
+  return createResponse({
+    success: true,
+    message: 'SKU「' + sku + '」を更新しました（' + updatedCount + ' 項目）',
+    updated: updatedCount
+  });
+}
+
+/**
+ * 批次更新商品圖片 URL（画像一括アップロード用）
+ * payload: items: Array<{ sku: string, imageUrl: string }>
+ *
+ * 行為：一次讀取 A 列建立 SKU→列號對照，逐筆把 imageUrl 寫入 M 欄。
+ * 回傳成功筆數與找不到的 SKU 清單。
+ */
+function handleUpdateImages(items) {
+  if (!items || !Array.isArray(items) || items.length === 0) {
+    return createResponse({ success: false, message: '画像データがありません' });
+  }
+
+  var ss = SpreadsheetApp.openById('1CSCXZNC6xJmqpfV7uEtvsYXo0mv2Ew7ZgESEyn5GVc0');
+  var masterSheet = ss.getSheetByName(SHEET_NAME_MASTER);
+  if (!masterSheet) {
+    return createResponse({ success: false, message: 'Product_Master シートが見つかりません' });
+  }
+
+  // SKU → 列號對照表（一次讀取）
+  var lastRow = masterSheet.getLastRow();
+  var rowMap = {};
+  if (lastRow > 1) {
+    var skuRange = masterSheet.getRange(2, 1, lastRow - 1, 1).getValues();
+    for (var i = 0; i < skuRange.length; i++) {
+      var s = String(skuRange[i][0]).trim().toUpperCase();
+      if (s && rowMap[s] === undefined) {
+        rowMap[s] = i + 2;
+      }
+    }
+  }
+
+  var updated = 0;
+  var notFound = [];
+
+  for (var j = 0; j < items.length; j++) {
+    var sku = String(items[j].sku || '').trim();
+    var imageUrl = String(items[j].imageUrl || '').trim();
+    if (!sku || !imageUrl) continue;
+
+    var rowIndex = rowMap[sku.toUpperCase()];
+    if (rowIndex === undefined) {
+      if (notFound.length < 20) notFound.push(sku);
+      continue;
+    }
+
+    masterSheet.getRange(rowIndex, 13).setValue(imageUrl); // M 欄
+    updated++;
+  }
+
+  return createResponse({
+    success: true,
+    updated: updated,
+    notFound: notFound,
+    message: updated + ' 件の画像を更新しました' + (notFound.length > 0 ? '（' + notFound.length + ' 件はSKU未登録）' : '')
+  });
+}
+
 /**
  * 完全置換 Inventory_Raw（用於每日自動更新庫存）
  * payload: rows: Array<{sku, productName, stock, price, warehouseCode}>, token: string

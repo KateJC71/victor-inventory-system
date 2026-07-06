@@ -108,6 +108,25 @@ const App: React.FC = () => {
     });
   };
 
+  const handleUpdateProduct = (updatedProduct: Product) => {
+    setProducts(prev => {
+      const updated = prev.map(p => (p.sku === updatedProduct.sku ? updatedProduct : p));
+      localStorage.setItem('victor_inventory', JSON.stringify(updated));
+      return updated;
+    });
+  };
+
+  const handleUpdateImages = (urlBySku: Map<string, string>) => {
+    setProducts(prev => {
+      const updated = prev.map(p => {
+        const url = urlBySku.get(p.sku);
+        return url ? { ...p, imageUrl: url } : p;
+      });
+      localStorage.setItem('victor_inventory', JSON.stringify(updated));
+      return updated;
+    });
+  };
+
   const handleUpdateSubCategory = (category: CategoryType, oldName: string, newName: string) => {
     setProducts(prev => {
       const updated = prev.map(p => {
@@ -180,6 +199,8 @@ const App: React.FC = () => {
           <ManageView
             products={products}
             onAddProduct={handleAddProduct}
+            onUpdateProduct={handleUpdateProduct}
+            onUpdateImages={handleUpdateImages}
             onUpdateSubCategory={handleUpdateSubCategory}
             onDeleteSubCategory={handleDeleteSubCategory}
           />

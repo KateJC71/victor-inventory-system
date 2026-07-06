@@ -1,8 +1,8 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import * as XLSX from 'xlsx';
 import { Product, CategoryType, CATEGORIES, CATEGORY_HIERARCHY, GENDERS } from '../types';
-import { PackagePlus, FolderTree, Save, ChevronDown, ChevronRight, Edit2, Check, X, Lock, Plus, Trash2, Loader2, Sparkles, Upload, Image as ImageIcon, FileSpreadsheet, Download, AlertTriangle, CheckCircle } from 'lucide-react';
-import { writeFullProduct, uploadImageToCloudinary, writeProductsBatch, BulkProductPayload } from '../services/googleSheets';
+import { PackagePlus, FolderTree, Save, ChevronDown, ChevronRight, Edit2, Check, X, Lock, Plus, Trash2, Loader2, Sparkles, Upload, Image as ImageIcon, FileSpreadsheet, Download, AlertTriangle, CheckCircle, Search } from 'lucide-react';
+import { writeFullProduct, uploadImageToCloudinary, writeProductsBatch, BulkProductPayload, updateProductInSheet, updateProductImages } from '../services/googleSheets';
 
 // --- Sub Component: Image Upload Field ---
 const ImageUploadField: React.FC<{ value: string; onChange: (url: string) => void }> = ({ value, onChange }) => {
@@ -107,12 +107,14 @@ const ADMIN_PASSWORD = 'Victor2025';
 interface ManageViewProps {
   products: Product[];
   onAddProduct: (product: Product) => void;
+  onUpdateProduct: (product: Product) => void;
+  onUpdateImages: (urlBySku: Map<string, string>) => void;
   onUpdateSubCategory: (category: CategoryType, oldName: string, newName: string) => void;
   onDeleteSubCategory: (category: CategoryType, subCategoryName: string) => void;
 }
 
-export const ManageView: React.FC<ManageViewProps> = ({ products, onAddProduct, onUpdateSubCategory, onDeleteSubCategory }) => {
-  const [activeSubTab, setActiveSubTab] = useState<'add' | 'bulk' | 'structure'>('add');
+export const ManageView: React.FC<ManageViewProps> = ({ products, onAddProduct, onUpdateProduct, onUpdateImages, onUpdateSubCategory, onDeleteSubCategory }) => {
+  const [activeSubTab, setActiveSubTab] = useState<'add' | 'bulk' | 'batchImage' | 'edit' | 'structure'>('add');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -189,6 +191,24 @@ export const ManageView: React.FC<ManageViewProps> = ({ products, onAddProduct, 
             一括登録
           </button>
           <button
+            onClick={() => setActiveSubTab('batchImage')}
+            className={`px-4 py-2 rounded-md transition-all flex items-center gap-2 whitespace-nowrap ${
+              activeSubTab === 'batchImage' ? 'bg-white text-stone-900 shadow-sm' : 'text-stone-500 hover:text-stone-700'
+            }`}
+          >
+            <ImageIcon size={16} />
+            画像一括
+          </button>
+          <button
+            onClick={() => setActiveSubTab('edit')}
+            className={`px-4 py-2 rounded-md transition-all flex items-center gap-2 whitespace-nowrap ${
+              activeSubTab === 'edit' ? 'bg-white text-stone-900 shadow-sm' : 'text-stone-500 hover:text-stone-700'
+            }`}
+          >
+            <Edit2 size={16} />
+            商品編集
+          </button>
+          <button
             onClick={() => setActiveSubTab('structure')}
             className={`px-4 py-2 rounded-md transition-all flex items-center gap-2 whitespace-nowrap ${
               activeSubTab === 'structure' ? 'bg-white text-stone-900 shadow-sm' : 'text-stone-500 hover:text-stone-700'
@@ -202,6 +222,8 @@ export const ManageView: React.FC<ManageViewProps> = ({ products, onAddProduct, 
 
       {activeSubTab === 'add' && <AddProductForm products={products} onAdd={onAddProduct} />}
       {activeSubTab === 'bulk' && <BulkImportForm products={products} onAdd={onAddProduct} />}
+      {activeSubTab === 'batchImage' && <BatchImageUpload products={products} onUpdateImages={onUpdateImages} />}
+      {activeSubTab === 'edit' && <ProductEditForm products={products} onUpdateProduct={onUpdateProduct} />}
       {activeSubTab === 'structure' && <CategoryStructureEditor products={products} onUpdate={onUpdateSubCategory} onDelete={onDeleteSubCategory} />}
     </div>
   );
@@ -1062,6 +1084,515 @@ const CategoryStructureEditor: React.FC<{
           </div>
         );
       })}
+    </div>
+  );
+};
+// --- Sub Component: Batch Image Upload (画像一括アップロード) ---
+
+interface BatchImageItem {
+  file: File;
+  sku: string | null;
+  status: 'ready' | 'unmatched' | 'uploading' | 'done' | 'error';
+  imageUrl?: string;
+  message?: string;
+}
+
+const BatchImageUpload: React.FC<{
+  products: Product[];
+  onUpdateImages: (urlBySku: Map<string, string>) => void;
+}> = ({ products, onUpdateImages }) => {
+  const [items, setItems] = useState<BatchImageItem[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const [resultMessage, setResultMessage] = useState<string | null>(null);
+  const [resultError, setResultError] = useState<string | null>(null);
+  const [dragOver, setDragOver] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // SKU 對照表（大寫去空白 → 原始 SKU）
+  const skuMap = useMemo(() => {
+    const map = new Map<string, string>();
+    products.forEach(p => map.set(p.sku.trim().toUpperCase(), p.sku));
+    return map;
+  }, [products]);
+
+  const handleFiles = (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    setResultMessage(null);
+    setResultError(null);
+    const list: BatchImageItem[] = Array.from(files)
+      .filter(f => f.type.startsWith('image/'))
+      .map(file => {
+        const baseName = file.name.replace(/\.[^.]+$/, '').trim();
+        const sku = skuMap.get(baseName.toUpperCase()) || null;
+        return { file, sku, status: sku ? ('ready' as const) : ('unmatched' as const) };
+      });
+    setItems(list);
+  };
+
+  const updateItem = (index: number, patch: Partial<BatchImageItem>) => {
+    setItems(prev => prev.map((item, i) => (i === index ? { ...item, ...patch } : item)));
+  };
+
+  const handleUpload = async () => {
+    setUploading(true);
+    setResultMessage(null);
+    setResultError(null);
+
+    // 1. 逐張上傳到 Cloudinary
+    const uploaded: Array<{ sku: string; imageUrl: string }> = [];
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      if (!item.sku || item.status === 'done') continue;
+      updateItem(i, { status: 'uploading' });
+      try {
+        const url = await uploadImageToCloudinary(item.file);
+        uploaded.push({ sku: item.sku, imageUrl: url });
+        updateItem(i, { status: 'done', imageUrl: url });
+      } catch (err) {
+        updateItem(i, { status: 'error', message: err instanceof Error ? err.message : 'アップロード失敗' });
+      }
+    }
+
+    // 2. 一次把所有 URL 寫回 Google Sheet
+    if (uploaded.length > 0) {
+      try {
+        const result = await updateProductImages(uploaded);
+        // 3. 更新本地畫面
+        const urlBySku = new Map(uploaded.map(u => [u.sku, u.imageUrl]));
+        onUpdateImages(urlBySku);
+        setResultMessage(result.message);
+      } catch (err) {
+        setResultError(
+          (err instanceof Error ? err.message : 'Sheet への書き込みに失敗しました') +
+          '（画像は Cloudinary にアップロード済みです。再試行してください）'
+        );
+      }
+    }
+
+    setUploading(false);
+  };
+
+  const readyCount = items.filter(i => i.status === 'ready').length;
+  const doneCount = items.filter(i => i.status === 'done').length;
+  const errorCount = items.filter(i => i.status === 'error').length;
+  const unmatchedCount = items.filter(i => i.status === 'unmatched').length;
+  const totalUploadable = items.filter(i => i.status !== 'unmatched').length;
+  const allDone = totalUploadable > 0 && doneCount + errorCount === totalUploadable && !uploading;
+
+  const statusIcon = (item: BatchImageItem) => {
+    switch (item.status) {
+      case 'ready': return <CheckCircle size={14} className="text-stone-400 shrink-0" />;
+      case 'unmatched': return <AlertTriangle size={14} className="text-amber-500 shrink-0" />;
+      case 'uploading': return <Loader2 size={14} className="text-stone-900 animate-spin shrink-0" />;
+      case 'done': return <CheckCircle size={14} className="text-green-600 shrink-0" />;
+      case 'error': return <X size={14} className="text-red-500 shrink-0" />;
+    }
+  };
+
+  return (
+    <div className="bg-white p-6 rounded-xl shadow-sm border border-stone-200 max-w-3xl mx-auto space-y-4">
+      <div>
+        <h3 className="font-bold text-stone-900 flex items-center gap-2">
+          <ImageIcon size={18} />
+          画像一括アップロード
+        </h3>
+        <p className="text-xs text-stone-500 mt-1">
+          ファイル名を SKU にした画像を複数選択してください（例: A170JR-AB180.jpg）。
+          選択後、SKU との照合結果を確認してからアップロードできます。
+        </p>
+      </div>
+
+      <input
+        type="file"
+        ref={fileInputRef}
+        className="hidden"
+        accept="image/*"
+        multiple
+        onChange={e => handleFiles(e.target.files)}
+      />
+
+      {items.length === 0 ? (
+        <div
+          onDragOver={e => { e.preventDefault(); setDragOver(true); }}
+          onDragLeave={() => setDragOver(false)}
+          onDrop={e => { e.preventDefault(); setDragOver(false); handleFiles(e.dataTransfer.files); }}
+          onClick={() => fileInputRef.current?.click()}
+          className={`cursor-pointer border-2 border-dashed rounded-lg p-10 text-center transition-colors ${
+            dragOver ? 'border-stone-400 bg-stone-50' : 'border-stone-300 hover:border-stone-400 hover:bg-stone-50'
+          }`}
+        >
+          <div className="flex flex-col items-center gap-2 text-stone-500">
+            <Upload size={28} />
+            <span className="text-sm font-medium">画像をまとめてドラッグ または クリックして選択</span>
+            <span className="text-xs text-stone-400">JPG / PNG / GIF / WebP・複数選択可</span>
+          </div>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between text-sm">
+            <div className="space-x-3">
+              <span className="text-stone-900 font-medium">照合OK: {readyCount + doneCount + errorCount} 件</span>
+              {unmatchedCount > 0 && (
+                <span className="text-amber-600 font-medium">SKU不一致: {unmatchedCount} 件</span>
+              )}
+            </div>
+            <button
+              onClick={() => { setItems([]); setResultMessage(null); setResultError(null); if (fileInputRef.current) fileInputRef.current.value = ''; }}
+              disabled={uploading}
+              className="text-stone-400 hover:text-stone-600 text-xs underline disabled:opacity-50"
+            >
+              クリア
+            </button>
+          </div>
+
+          <div className="max-h-72 overflow-y-auto border border-stone-100 rounded-lg divide-y divide-stone-50">
+            {items.map((item, i) => (
+              <div key={i} className="px-3 py-2 text-xs flex items-center gap-2">
+                {statusIcon(item)}
+                <span className="text-stone-700 truncate flex-1">{item.file.name}</span>
+                {item.sku ? (
+                  <span className="text-stone-400 font-mono shrink-0">{item.sku}</span>
+                ) : (
+                  <span className="text-amber-600 shrink-0">SKU が見つかりません</span>
+                )}
+                {item.status === 'error' && item.message && (
+                  <span className="text-red-500 shrink-0 max-w-[10rem] truncate" title={item.message}>{item.message}</span>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {uploading && (
+            <div className="w-full bg-stone-100 rounded-full h-2 overflow-hidden">
+              <div
+                className="bg-stone-900 h-full transition-all"
+                style={{ width: `${totalUploadable > 0 ? ((doneCount + errorCount) / totalUploadable) * 100 : 0}%` }}
+              />
+            </div>
+          )}
+
+          {resultMessage && (
+            <p className="text-center text-green-700 text-sm font-medium bg-green-50 border border-green-100 rounded-lg py-2">
+              ✅ {resultMessage}
+            </p>
+          )}
+          {resultError && (
+            <p className="text-center text-red-600 text-sm bg-red-50 border border-red-100 rounded-lg py-2 px-3">
+              {resultError}
+            </p>
+          )}
+
+          {!allDone && (
+            <button
+              onClick={handleUpload}
+              disabled={uploading || readyCount === 0}
+              className="w-full bg-stone-900 hover:bg-stone-800 text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
+            >
+              {uploading ? (
+                <>
+                  <Loader2 size={16} className="animate-spin" />
+                  アップロード中... {doneCount + errorCount}/{totalUploadable}
+                </>
+              ) : (
+                <>アップロード開始（{readyCount} 件）</>
+              )}
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// --- Sub Component: Product Edit Form (既存商品の編集) ---
+
+const ProductEditForm: React.FC<{
+  products: Product[];
+  onUpdateProduct: (p: Product) => void;
+}> = ({ products, onUpdateProduct }) => {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selected, setSelected] = useState<Product | null>(null);
+  const [form, setForm] = useState({
+    modelName: '',
+    category: CategoryType.Racket as CategoryType,
+    subCategory: '',
+    gender: '',
+    color: '',
+    size: '',
+    weightClass: '',
+    gripSize: '',
+    imageUrl: '',
+  });
+  const [saving, setSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
+
+  const searchResults = useMemo(() => {
+    const term = searchTerm.trim().toLowerCase();
+    if (!term) return [];
+    return products
+      .filter(p => p.sku.toLowerCase().includes(term) || p.name.toLowerCase().includes(term) || p.modelName.toLowerCase().includes(term))
+      .slice(0, 10);
+  }, [products, searchTerm]);
+
+  const existingSubCategories = useMemo(() => {
+    const subs = new Set<string>();
+    const staticSubs = CATEGORY_HIERARCHY[form.category] || [];
+    staticSubs.forEach(s => subs.add(s));
+    products
+      .filter(p => p.category === form.category)
+      .forEach(p => { if (p.subCategory) subs.add(p.subCategory); });
+    return Array.from(subs).sort();
+  }, [products, form.category]);
+
+  const handleSelect = (p: Product) => {
+    setSelected(p);
+    setForm({
+      modelName: p.modelName || '',
+      category: p.category,
+      subCategory: p.subCategory || '',
+      gender: p.gender || '',
+      color: p.color || '',
+      size: p.size || '',
+      weightClass: p.weightClass || '',
+      gripSize: p.gripSize || '',
+      imageUrl: p.imageUrl || '',
+    });
+    setSaveMessage(null);
+    setSaveError(null);
+  };
+
+  const handleFieldChange = (field: keyof typeof form, value: string) => {
+    setForm(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleSave = async () => {
+    if (!selected) return;
+    setSaving(true);
+    setSaveMessage(null);
+    setSaveError(null);
+    try {
+      const result = await updateProductInSheet(selected.sku, {
+        modelName: form.modelName,
+        category: form.category,
+        subCategory: form.subCategory,
+        gender: form.gender,
+        color: form.color,
+        colorCode: form.color,
+        size: form.size,
+        weightClass: form.weightClass,
+        gripSize: form.gripSize,
+        imageUrl: form.imageUrl,
+      });
+
+      // Sheet 更新成功 → 同步本地畫面
+      onUpdateProduct({
+        ...selected,
+        modelName: form.modelName,
+        category: form.category,
+        subCategory: form.subCategory,
+        gender: form.gender,
+        color: form.color,
+        size: form.size,
+        weightClass: form.weightClass,
+        gripSize: form.gripSize,
+        imageUrl: form.imageUrl,
+      });
+      setSaveMessage(result.message);
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : '保存に失敗しました');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="bg-white p-6 rounded-xl shadow-sm border border-stone-200 max-w-3xl mx-auto space-y-4">
+      <div>
+        <h3 className="font-bold text-stone-900 flex items-center gap-2">
+          <Edit2 size={18} />
+          商品編集
+        </h3>
+        <p className="text-xs text-stone-500 mt-1">
+          変更内容は Google Sheets（Product_Master）に直接保存されます。価格・在庫は在庫データ更新で反映してください。
+        </p>
+      </div>
+
+      <div className="relative">
+        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
+        <input
+          type="text"
+          value={searchTerm}
+          onChange={e => { setSearchTerm(e.target.value); setSelected(null); setSaveMessage(null); setSaveError(null); }}
+          className="w-full p-2 pl-9 border border-stone-300 rounded-lg focus:ring-2 focus:ring-stone-900 outline-none text-sm"
+          placeholder="SKU / 商品名 / 型番 で検索..."
+        />
+      </div>
+
+      {!selected && searchResults.length > 0 && (
+        <div className="border border-stone-100 rounded-lg divide-y divide-stone-50 max-h-60 overflow-y-auto">
+          {searchResults.map(p => (
+            <button
+              key={p.sku}
+              onClick={() => handleSelect(p)}
+              className="w-full px-3 py-2.5 text-left text-xs hover:bg-stone-50 flex items-center gap-3"
+            >
+              {p.imageUrl ? (
+                <img src={p.imageUrl} alt="" className="w-8 h-8 object-contain bg-stone-50 rounded shrink-0" />
+              ) : (
+                <div className="w-8 h-8 bg-stone-100 rounded shrink-0 flex items-center justify-center text-stone-300">
+                  <ImageIcon size={14} />
+                </div>
+              )}
+              <span className="font-mono text-stone-500 shrink-0">{p.sku}</span>
+              <span className="text-stone-700 truncate">{p.modelName}{p.color ? ` / ${p.color}` : ''}{p.size ? ` / ${p.size}` : ''}</span>
+            </button>
+          ))}
+        </div>
+      )}
+      {!selected && searchTerm.trim() && searchResults.length === 0 && (
+        <p className="text-center text-stone-400 text-sm py-4">該当する商品がありません</p>
+      )}
+
+      {selected && (
+        <div className="space-y-4">
+          <div className="bg-stone-50 rounded-lg p-3 text-xs flex items-center justify-between">
+            <div>
+              <span className="text-stone-500">編集中の SKU：</span>
+              <span className="font-mono font-bold text-stone-900">{selected.sku}</span>
+            </div>
+            <button
+              onClick={() => { setSelected(null); setSaveMessage(null); setSaveError(null); }}
+              className="text-stone-400 hover:text-stone-600 underline"
+            >
+              別の商品を選ぶ
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-bold text-stone-500 mb-1">Model Name</label>
+              <input
+                type="text"
+                value={form.modelName}
+                onChange={e => handleFieldChange('modelName', e.target.value)}
+                className="w-full p-2 border border-stone-300 rounded focus:ring-2 focus:ring-stone-900 outline-none"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-stone-500 mb-1">ジェンダー</label>
+              <select
+                value={form.gender}
+                onChange={e => handleFieldChange('gender', e.target.value)}
+                className="w-full p-2 border border-stone-300 rounded focus:ring-2 focus:ring-stone-900 outline-none bg-white"
+              >
+                <option value="">未設定</option>
+                {GENDERS.map(g => (
+                  <option key={g} value={g}>{g}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-bold text-stone-500 mb-1">大分類</label>
+              <select
+                value={form.category}
+                onChange={e => handleFieldChange('category', e.target.value)}
+                className="w-full p-2 border border-stone-300 rounded focus:ring-2 focus:ring-stone-900 outline-none bg-white"
+              >
+                {CATEGORIES.map(c => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-stone-500 mb-1">小分類</label>
+              <input
+                type="text"
+                list="edit-subcategories-list"
+                value={form.subCategory}
+                onChange={e => handleFieldChange('subCategory', e.target.value)}
+                className="w-full p-2 border border-stone-300 rounded focus:ring-2 focus:ring-stone-900 outline-none"
+                placeholder="リストから選択または入力..."
+              />
+              <datalist id="edit-subcategories-list">
+                {existingSubCategories.map(sub => (
+                  <option key={sub} value={sub} />
+                ))}
+              </datalist>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-bold text-stone-500 mb-1">カラー</label>
+              <input
+                type="text"
+                value={form.color}
+                onChange={e => handleFieldChange('color', e.target.value)}
+                className="w-full p-2 border border-stone-300 rounded outline-none"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-stone-500 mb-1">サイズ</label>
+              <input
+                type="text"
+                value={form.size}
+                onChange={e => handleFieldChange('size', e.target.value)}
+                className="w-full p-2 border border-stone-300 rounded outline-none"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-bold text-stone-500 mb-1">重量 (3U/4U/5U)</label>
+              <input
+                type="text"
+                value={form.weightClass}
+                onChange={e => handleFieldChange('weightClass', e.target.value)}
+                className="w-full p-2 border border-stone-300 rounded outline-none"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-stone-500 mb-1">グリップ (G5/G6)</label>
+              <input
+                type="text"
+                value={form.gripSize}
+                onChange={e => handleFieldChange('gripSize', e.target.value)}
+                className="w-full p-2 border border-stone-300 rounded outline-none"
+              />
+            </div>
+          </div>
+
+          <ImageUploadField
+            value={form.imageUrl}
+            onChange={url => handleFieldChange('imageUrl', url)}
+          />
+
+          {saveMessage && (
+            <p className="text-center text-green-700 text-sm font-medium bg-green-50 border border-green-100 rounded-lg py-2">
+              ✅ {saveMessage}
+            </p>
+          )}
+          {saveError && (
+            <p className="text-center text-red-600 text-sm bg-red-50 border border-red-100 rounded-lg py-2 px-3">
+              ❌ {saveError}
+            </p>
+          )}
+
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="w-full bg-stone-900 hover:bg-stone-800 text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
+          >
+            {saving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
+            {saving ? '保存中...' : '変更を保存'}
+          </button>
+        </div>
+      )}
     </div>
   );
 };
